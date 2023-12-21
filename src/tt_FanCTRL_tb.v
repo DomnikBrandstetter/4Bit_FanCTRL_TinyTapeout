@@ -27,7 +27,7 @@ wire [7:0] ui_in;
 
 integer i;   
 
-tt_FanCTRL #(.PID_CLK_DIV (PID_CLK_DIV), .PWM_CLK_DIV (PWM_CLK_DIV) ) tt_FAN (
+tt_um_FanCTRL #(.PID_CLK_DIV (PID_CLK_DIV), .PWM_CLK_DIV (PWM_CLK_DIV) ) tt_FAN (
     `ifdef GL_TEST
         .VPWR( 1'b1),
         .VGND( 1'b0),
