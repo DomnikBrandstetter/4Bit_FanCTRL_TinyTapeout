@@ -5,15 +5,18 @@
 module FanCTRL_tb();
 
     // this part dumps the trace to a vcd file that can be viewed with GTKWave
-//initial begin
-  //   $dumpfile ("tb.vcd");
-  //   $dumpvars (0, tb);
- //    #1;
- //end
+    initial begin
+    $dumpfile ("FAN_tb.vcd");
+    $dumpvars (0, FanCTRL_tb);
+    #1;
+end
 
 localparam FRAC_BITWIDTH = 30;
 localparam REG_BITWIDTH = 5;
 localparam ADC_BITWIDTH = 8;
+
+localparam [ADC_BITWIDTH-1:0] MIN_FAN_SPEED = 65;
+localparam [ADC_BITWIDTH:0] PERIOD_COUNTER = 320;
 
 //PT2-Glied
 localparam real B2_PT2 = 5.76318539197624e-06;   
@@ -46,14 +49,16 @@ reg [ADC_BITWIDTH-1:0]ADC_TEST_sim;
 reg [ADC_BITWIDTH-1:0]SET_TEST_sim;
 reg PT2_enable = 0;
 
+wire PWM_pin_tb;
+
 FanCTRL #(.ADC_BITWIDTH (ADC_BITWIDTH), .REG_BITWIDTH (REG_BITWIDTH+FRAC_BITWIDTH), .FRAC_BITWIDTH (FRAC_BITWIDTH)) FAN (
 
     .clk_i (clk_tb),
     .rstn_i (rstn_tb),
     .clk_en_PWM_i (clk_en_PWM_tb),
     .dataValid_STRB_i (dataValid_STRB_tb),
-    .periodCounterValue_i (9'd_320),
-    .minCounterValue_i (8'd_65),
+    .periodCounterValue_i (PERIOD_COUNTER),
+    .minCounterValue_i (MIN_FAN_SPEED),
     .ADC_value_i (ADC_VAL_sim),
     .SET_value_i (SET_VAL_sim),
 
@@ -101,18 +106,18 @@ always #10 dataValid_STRB_tb = ~dataValid_STRB_tb;
 
 initial begin
     PT2_enable = 0;
+    ADC_TEST_sim = 100;
+    SET_TEST_sim = 20;
     rstn_tb = 0;
     #10;
     rstn_tb = 1;
-    ADC_TEST_sim = 100;
-    SET_TEST_sim = 20;
     #30000;
 
     PT2_enable = 1;
     rstn_tb = 0;
     #10;
     rstn_tb = 1; 
-    #50000; 
+    #50000 $finish;
 end
 
 endmodule
