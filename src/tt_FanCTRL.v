@@ -3,7 +3,7 @@
 `include "DecoderSEG7.v"
 // external clock is 10MHz
 
-module tt_FanCTRL #( parameter PID_CLK_DIV = 17'd99_999, PWM_CLK_DIV = 4'd13 ) (
+module tt_um_FanCTRL #( parameter PID_CLK_DIV = 17'd99_999, PWM_CLK_DIV = 4'd13 ) (
     input  wire [7:0] ui_in,    // Dedicated inputs - connected to the input switches
     output wire [7:0] uo_out,   // Dedicated outputs - connected to the 7 segment display
     input  wire [7:0] uio_in,   // IOs: Bidirectional Input path
