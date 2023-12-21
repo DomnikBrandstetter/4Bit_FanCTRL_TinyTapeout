@@ -41,7 +41,7 @@ assign out_Val_o = out_Val[0][ADC_BITWIDTH + 2*FRAC_BITWIDTH:2*FRAC_BITWIDTH];//
 
 
 
-always @(posedge clk_i, rstn_i) begin
+always @(posedge clk_i) begin
 
     if (!rstn_i) begin
         error_Val_sreg[0] <= 0;  

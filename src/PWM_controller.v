@@ -12,7 +12,7 @@ reg [COUNTER_BITWIDTH:0] counterValue;
 reg [COUNTER_BITWIDTH:0] periodCounterValue;
 reg [COUNTER_BITWIDTH:0] counter;
 
-always @(posedge clk_i, rstn_i) begin
+always @(posedge clk_i) begin
 
     if (!rstn_i) begin
         counter <= 0;

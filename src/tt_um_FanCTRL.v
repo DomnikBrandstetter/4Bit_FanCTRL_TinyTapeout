@@ -83,7 +83,7 @@ assign configPin = uio_in[1];
 assign clk_enPID = (PID_clk_div_counterValue == PID_CLK_DIV)? 'b1 : 'b0;
 assign clk_enPWM = (PWM_clk_div_counterValue == PWM_CLK_DIV)? 'b1 : 'b0;
 
-always @(posedge clk, rst_n) begin
+always @(posedge clk) begin
 
     if (!rst_n) begin
         PID_clk_div_counterValue <= 0;
@@ -94,7 +94,7 @@ always @(posedge clk, rst_n) begin
     end
 end
 
-always @(posedge clk, rst_n) begin
+always @(posedge clk) begin
 
     if (!rst_n) begin
         PWM_clk_div_counterValue <= 0;
@@ -105,7 +105,7 @@ always @(posedge clk, rst_n) begin
     end
 end
 
-always @(posedge clk, rst_n) begin
+always @(posedge clk) begin
 
     if (!rst_n) begin
         ADC_value <= 0;
