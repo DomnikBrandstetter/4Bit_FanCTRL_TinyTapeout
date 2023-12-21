@@ -1,4 +1,4 @@
-module PID_core #(parameter ADC_BITWIDTH=8, REG_BITWIDTH=5, FRAC_BITWIDTH=30)(
+module Fan_PID_core #(parameter ADC_BITWIDTH=8, REG_BITWIDTH=5, FRAC_BITWIDTH=30)(
     input wire clk_i,
     input wire rstn_i,
     input wire clk_en_PID_i,

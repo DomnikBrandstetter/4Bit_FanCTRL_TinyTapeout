@@ -1,6 +1,6 @@
 `default_nettype none
 `include "FanCTRL.v"
-`include "DecoderSEG7.v"
+`include "decoder.v"
 // external clock is 10MHz
 
 module tt_um_FanCTRL #( parameter PID_CLK_DIV = 17'd99_999, PWM_CLK_DIV = 4'd13 ) (
@@ -40,7 +40,7 @@ reg [7:0] SET_value;
 reg [16:0] PID_clk_div_counterValue;
 reg [3:0] PWM_clk_div_counterValue;
 
-FanCTRL #(.ADC_BITWIDTH (ADC_BITWIDTH), .REG_BITWIDTH (REG_BITWIDTH+FRAC_BITWIDTH), .FRAC_BITWIDTH (FRAC_BITWIDTH)) FAN (
+FanCTRL_core #(.ADC_BITWIDTH (ADC_BITWIDTH), .REG_BITWIDTH (REG_BITWIDTH+FRAC_BITWIDTH), .FRAC_BITWIDTH (FRAC_BITWIDTH)) FAN (
 
     .clk_i (clk),
     .rstn_i (rst_n),
@@ -62,7 +62,7 @@ FanCTRL #(.ADC_BITWIDTH (ADC_BITWIDTH), .REG_BITWIDTH (REG_BITWIDTH+FRAC_BITWIDT
     );
     
     // segment display
-DecoderSEG7 #() seg7 (
+seg7 #() sevenSegmentDisplay (
     .counter(sevenSeg),
     .segments(led_out)
      );

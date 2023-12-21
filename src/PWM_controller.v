@@ -1,4 +1,4 @@
-module PWM_controller #(parameter COUNTER_BITWIDTH=8)(
+module Fan_PWM_controller #(parameter COUNTER_BITWIDTH=8)(
     input wire clk_i,
     input wire clk_en_i,
     input wire rstn_i,
