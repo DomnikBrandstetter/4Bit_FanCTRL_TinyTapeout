@@ -1,5 +1,5 @@
-`include "PWM_controller.v"
-`include "PID_core.v"
+//`include "PWM_controller.v"
+//`include "PID_core.v"
 
 module FanCTRL_core #(parameter ADC_BITWIDTH=8, REG_BITWIDTH=5, FRAC_BITWIDTH=30)(
     input wire clk_i,
