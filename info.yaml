@@ -7,7 +7,7 @@ project:
 # Source files must be in ./src and you must list each source file separately
   source_files:        
     - tt_um_FanCTRL.v
-    - DecoderSEG7.v
+    - decoder.v
     - FanCTRL.v
     - PID_core.v
     - PWM_controller.v
