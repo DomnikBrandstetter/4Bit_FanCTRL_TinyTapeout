@@ -1,6 +1,15 @@
+`default_nettype none
 `timescale 1ns/1ps
+`include "FanCTRL.v"
 
-module FanCTRL_tb;
+module FanCTRL_tb();
+
+    // this part dumps the trace to a vcd file that can be viewed with GTKWave
+//initial begin
+  //   $dumpfile ("tb.vcd");
+  //   $dumpvars (0, tb);
+ //    #1;
+ //end
 
 localparam FRAC_BITWIDTH = 30;
 localparam REG_BITWIDTH = 5;
@@ -17,10 +26,10 @@ localparam real ERROR = 0.05;
 reg clk_tb = 0;
 reg clk_en_PWM_tb = 0;
 reg rstn_tb;
-reg dataValid_STRB_tb;
+reg dataValid_STRB_tb = 0;
 reg [ADC_BITWIDTH-1:0] ADC_value_tb;
 
-wire [ADC_BITWIDTH-1:0] SET_value_tb;
+reg [ADC_BITWIDTH-1:0] SET_value_tb;
 wire signed [ADC_BITWIDTH:0] PID_Val_tb;
 wire [ADC_BITWIDTH-1:0] PT2_simVal_tb;
 
@@ -41,8 +50,8 @@ FanCTRL #(.ADC_BITWIDTH (ADC_BITWIDTH), .REG_BITWIDTH (REG_BITWIDTH+FRAC_BITWIDT
     .rstn_i (rstn_tb),
     .clk_en_PWM_i (clk_en_PWM_tb),
     .dataValid_STRB_i (dataValid_STRB_tb),
-    .periodCounterValue_i (9'd_320),
-    .minCounterValue_i (8'd_65),
+    .periodCounterValue_i (9'd320),
+    .minCounterValue_i (8'd65),
     .ADC_value_i (PT2_simVal_tb),
     .SET_value_i (SET_value_tb),
 
@@ -62,7 +71,7 @@ assign b0_reg_tb = $rtoi(4.426043076923077 * (2 ** FRAC_BITWIDTH));   // 10'b000
 assign a1_reg_tb = $rtoi(-1.9230769230769231 * (2 ** FRAC_BITWIDTH)); //= 10'b1101110010;//10'b_11_0110_1100; //-9,25
 assign a0_reg_tb = $rtoi(0.9230769230769231 * (2 ** FRAC_BITWIDTH));  //= 10'b0001000111;//10'b_00_0100_1010;
 
-assign SET_value_tb = 230;
+//assign 
 
 assign PT2_simVal_tb = $rtoi(PT2_val[0]);
 
@@ -82,21 +91,29 @@ end
 
 always #5 clk_tb = ~clk_tb;
 always #20 clk_en_PWM_tb = ~clk_en_PWM_tb;
+always #10 dataValid_STRB_tb = ~dataValid_STRB_tb;
 
 initial begin
 
-    ADC_value_tb = 100;
-    dataValid_STRB_tb = 0;
+    SET_value_tb = 230;
+    //ADC_value_tb = 100;
+    //dataValid_STRB_tb = 0;
     rstn_tb = 0;
     #10;
     rstn_tb = 1;
     #15;
-    forever begin
-      dataValid_STRB_tb = 1;
-      #10;
-      dataValid_STRB_tb = 0;
-      #10;
-    end
+    //forever begin
+      //dataValid_STRB_tb = 1;
+      //#10;
+      //dataValid_STRB_tb = 0;
+     // #10;
+    //end
+    
+    
+    #10000
+    SET_value_tb = 50;
+    #1000
+     $finish;
     
 end
 

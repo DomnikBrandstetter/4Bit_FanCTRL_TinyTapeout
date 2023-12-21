@@ -1,4 +1,7 @@
-module FanCTRL #(parameter ADC_BITWIDTH, REG_BITWIDTH, FRAC_BITWIDTH)(
+`include "PWM_controller.v"
+`include "PID_core.v"
+
+module FanCTRL #(parameter ADC_BITWIDTH=8, REG_BITWIDTH=5, FRAC_BITWIDTH=30)(
     input wire clk_i,
     input wire rstn_i,
     input wire clk_en_PWM_i,
@@ -18,10 +21,12 @@ module FanCTRL #(parameter ADC_BITWIDTH, REG_BITWIDTH, FRAC_BITWIDTH)(
     output wire signed [ADC_BITWIDTH:0] PID_Val_o 
 );
 
-wire signed [ADC_BITWIDTH  :0] PID_Val;
-wire signed [ADC_BITWIDTH-1:0] counterValue;
+localparam [ADC_BITWIDTH-1:0] PWM_OFF = 0;
+
+wire signed [ADC_BITWIDTH:0] PID_Val;
+wire [ADC_BITWIDTH-1:0] counterValue;
 assign PID_Val_o = PID_Val;
-assign counterValue = (PID_Val < 0)? PID_Val : 0;
+assign counterValue = (PID_Val < 0)? PWM_OFF-PID_Val[ADC_BITWIDTH-1:0] : PWM_OFF;
 
 PWM_controller #(.COUNTER_BITWIDTH (ADC_BITWIDTH)) PWM(
     .clk_i (clk_i),
