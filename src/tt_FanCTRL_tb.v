@@ -1,6 +1,14 @@
 `timescale 1ns/1ps
+`include "tt_FanCTRL.v"
 
 module tt_FanCTRL_tb;
+
+    // this part dumps the trace to a vcd file that can be viewed with GTKWave
+    initial begin
+    $dumpfile ("tt_FAN_tb.vcd");
+    $dumpvars (0, tt_FanCTRL_tb);
+    #1;
+end
 
 localparam [16:0] PID_CLK_DIV = 17'd99_999;
 localparam [3:0] PWM_CLK_DIV = 4'd13;
@@ -20,6 +28,10 @@ wire [7:0] ui_in;
 integer i;   
 
 tt_FanCTRL #(.PID_CLK_DIV (PID_CLK_DIV), .PWM_CLK_DIV (PWM_CLK_DIV) ) tt_FAN (
+    `ifdef GL_TEST
+        .VPWR( 1'b1),
+        .VGND( 1'b0),
+    `endif
     .ui_in (ui_in),      // Dedicated inputs - connected to the input switches
     .uo_out (uo_out),    // Dedicated outputs - connected to the 7 segment display
     .uio_in (uio_in),    // IOs: Bidirectional Input path
@@ -50,7 +62,7 @@ initial begin
     configEnable = 0;
     data = 50;
 
-    #30000;
+    #30000 $finish;
 end
 
 endmodule

@@ -1,4 +1,6 @@
 `default_nettype none
+`include "FanCTRL.v"
+`include "DecoderSEG7.v"
 // external clock is 10MHz
 
 module tt_FanCTRL #( parameter PID_CLK_DIV = 17'd99_999, PWM_CLK_DIV = 4'd13 ) (
@@ -13,10 +15,11 @@ module tt_FanCTRL #( parameter PID_CLK_DIV = 17'd99_999, PWM_CLK_DIV = 4'd13 ) (
 );
 
 localparam FRAC_BITWIDTH = 30;
-localparam REG_BITWIDTH = 5;
+localparam REG_BITWIDTH = 2;
 localparam ADC_BITWIDTH = 8;
 localparam [ADC_BITWIDTH:0] PWM_PERIOD_COUNTER = 320;
 localparam [ADC_BITWIDTH-1:0] PWM_MIN_FAN_SPEED = 65;
+//localparam [REG_BITWIDTH+FRAC_BITWIDTH-33 : 0] ZERO_MASK = 0;
 
 //PID Parameter
 localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b2 = $rtoi(4.458581538461538   * (2 ** FRAC_BITWIDTH));
@@ -35,7 +38,7 @@ wire [6:0] led_out;
 reg [7:0] ADC_value;
 reg [7:0] SET_value;
 reg [16:0] PID_clk_div_counterValue;
-reg [4:0] PWM_clk_div_counterValue;
+reg [3:0] PWM_clk_div_counterValue;
 
 FanCTRL #(.ADC_BITWIDTH (ADC_BITWIDTH), .REG_BITWIDTH (REG_BITWIDTH+FRAC_BITWIDTH), .FRAC_BITWIDTH (FRAC_BITWIDTH)) FAN (
 
@@ -57,9 +60,16 @@ FanCTRL #(.ADC_BITWIDTH (ADC_BITWIDTH), .REG_BITWIDTH (REG_BITWIDTH+FRAC_BITWIDT
     .PWM_pin_o (PWM_pin),
     .PID_Val_o ()
     );
+    
+    // segment display
+DecoderSEG7 #() seg7 (
+    .counter(sevenSeg),
+    .segments(led_out)
+     );
 
 // use bidirectionals as inputs
 assign uio_oe = 8'b00000000;
+assign uio_out = 8'b00000000;
 
 assign uo_out[6:0] = led_out;
 assign uo_out[7] = PWM_pin;
@@ -105,9 +115,6 @@ always @(posedge clk, rst_n) begin
     end else if (ena & !configPin & dataVaild_STRB) begin
         ADC_value <= ui_in;
     end
-end
-
-// segment display
-seg7 seg7(.counter(), .segments(led_out));
+end 
 
 endmodule

@@ -5,7 +5,7 @@ module FanCTRL #(parameter ADC_BITWIDTH=8, REG_BITWIDTH=5, FRAC_BITWIDTH=30)(
     input wire clk_i,
     input wire rstn_i,
     input wire clk_en_PWM_i,
-    input wire dataValid_STRB_i,
+    input wire clk_en_PID_i,
     input wire [ADC_BITWIDTH  :0] periodCounterValue_i,
     input wire [ADC_BITWIDTH-1:0] minCounterValue_i,
     input wire [ADC_BITWIDTH-1:0] ADC_value_i,
@@ -42,7 +42,7 @@ PID_core #(.ADC_BITWIDTH (ADC_BITWIDTH), .REG_BITWIDTH (REG_BITWIDTH), .FRAC_BIT
 
     .clk_i (clk_i),
     .rstn_i (rstn_i),
-    .dataValid_STRB_i (dataValid_STRB_i),
+    .clk_en_PID_i (clk_en_PID_i),
     .ADC_value_i (ADC_value_i),
     .SET_value_i (SET_value_i),
 

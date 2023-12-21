@@ -9,7 +9,7 @@ module FanCTRL_tb();
     $dumpfile ("FAN_tb.vcd");
     $dumpvars (0, FanCTRL_tb);
     #1;
-end
+	end
 
 localparam FRAC_BITWIDTH = 30;
 localparam REG_BITWIDTH = 5;
@@ -56,7 +56,7 @@ FanCTRL #(.ADC_BITWIDTH (ADC_BITWIDTH), .REG_BITWIDTH (REG_BITWIDTH+FRAC_BITWIDT
     .clk_i (clk_tb),
     .rstn_i (rstn_tb),
     .clk_en_PWM_i (clk_en_PWM_tb),
-    .dataValid_STRB_i (dataValid_STRB_tb),
+    .clk_en_PID_i (dataValid_STRB_tb),
     .periodCounterValue_i (PERIOD_COUNTER),
     .minCounterValue_i (MIN_FAN_SPEED),
     .ADC_value_i (ADC_VAL_sim),
