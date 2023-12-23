@@ -16,7 +16,7 @@
 `include "FanCTRL.v"
 `include "decoder.v"
 
-module tt_um_FanCTRL #() (
+module tt_um_FanCTRL (
     input  wire [7:0] ui_in,    // Dedicated inputs               - (0-7) ADC/SET DATA IN 
     output wire [7:0] uo_out,   // Dedicated outputs              - (0-6) = 7 segment display / 7 = PWM-Pin
     input  wire [7:0] uio_in,   // IOs: Bidirectional Input path  - 0 = dataVaild_STRB        / 1 = config_en
@@ -30,7 +30,7 @@ module tt_um_FanCTRL #() (
 localparam REG_BITWIDTH = 4;
 localparam ADC_BITWIDTH = 8;
 
-// // PID - Parameter -> uses 240% Util
+// // PID - Parameter -> 100 Hz -> uses 240% Util
 // localparam FRAC_BITWIDTH = 35;
 // localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b2 = 39'd89486590317;
 // localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b1 = 39'd37128568331;
@@ -38,13 +38,21 @@ localparam ADC_BITWIDTH = 8;
 // localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_a1 = 39'd483077041442;
 // localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_a0 = 39'd32319034078;
 
-//PI - Parameter -> 
-localparam FRAC_BITWIDTH = 14;
-localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b2 = 18'd2326;   //$rtoi(0.14198388365958936   * (2 ** FRAC_BITWIDTH));
-localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b1 = 18'd1;      //$rtoi(8.92646033898664e-05  * (2 ** FRAC_BITWIDTH));
-localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b0 = 18'd259820; //$rtoi(-0.1418946190561995   * (2 ** FRAC_BITWIDTH)); 
-localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_a1 = 18'd0;      //$rtoi(0                     * (2 ** FRAC_BITWIDTH)); 
-localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_a0 = 18'd245760; //$rtoi(-1.0                  * (2 ** FRAC_BITWIDTH));
+//PI - Parameter -> 100 Hz -> uses 150% Util
+// localparam FRAC_BITWIDTH = 14;
+// localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b2 = 18'd2326;   //$rtoi(0.14198388365958936   * (2 ** FRAC_BITWIDTH));
+// localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b1 = 18'd1;      //$rtoi(8.92646033898664e-05  * (2 ** FRAC_BITWIDTH));
+// localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b0 = 18'd259820; //$rtoi(-0.1418946190561995   * (2 ** FRAC_BITWIDTH)); 
+// localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_a1 = 18'd0;      //$rtoi(0                     * (2 ** FRAC_BITWIDTH)); 
+// localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_a0 = 18'd245760; //$rtoi(-1.0                  * (2 ** FRAC_BITWIDTH));
+
+//PI - Parameter -> 1 Hz -> uses xx% Util
+localparam FRAC_BITWIDTH = 6;
+localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b2 =  10'd9;  
+localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b1 =  10'd0;    
+localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b0 = -10'd8; 
+localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_a1 =  10'd0;     
+localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_a0 = -10'd64;
 
 //Setup PWM
 localparam [ADC_BITWIDTH:0] PWM_PERIOD_COUNTER = 320;
