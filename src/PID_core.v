@@ -1,4 +1,6 @@
-module PID_core #(parameter ADC_BITWIDTH = 8, REG_BITWIDTH = 32, FRAC_BITWIDTH = 30, CLK_DIV_MULTIPLIER = 50)(
+`include "BIT_MUL.v"
+
+module Fan_PID_core #(parameter ADC_BITWIDTH = 8, REG_BITWIDTH = 32, FRAC_BITWIDTH = 30, CLK_DIV_MULTIPLIER = 50)(
     input wire clk_i,
     input wire rstn_i,
     input wire clk_en_PID_i,
@@ -63,14 +65,14 @@ assign error_Val = frac_SET_Val - frac_ADC_Val;
 
 assign out_Val_o = out_Val_sreg[0][MAX_VAL_BITWIDTH-1:2*FRAC_BITWIDTH]; 
 
-wire [MULTIPLIER_BITWIDTH-1:0] b2_coeff;
-wire [MULTIPLIER_BITWIDTH-1:0] b1_coeff;
-wire [MULTIPLIER_BITWIDTH-1:0] b0_coeff;
-wire [MULTIPLIER_BITWIDTH-1:0] a1_coeff;
-wire [MULTIPLIER_BITWIDTH-1:0] a0_coeff;
+wire signed [MULTIPLIER_BITWIDTH-1:0] b2_coeff;
+wire signed [MULTIPLIER_BITWIDTH-1:0] b1_coeff;
+wire signed [MULTIPLIER_BITWIDTH-1:0] b0_coeff;
+wire signed [MULTIPLIER_BITWIDTH-1:0] a1_coeff;
+wire signed [MULTIPLIER_BITWIDTH-1:0] a0_coeff;
 
-wire [RESULT_BITWIDTH-1:0] out_Val_shift_m1;
-wire [RESULT_BITWIDTH-1:0] out_Val_shift_m2;
+wire signed [RESULT_BITWIDTH-1:0] out_Val_shift_m1;
+wire signed [RESULT_BITWIDTH-1:0] out_Val_shift_m2;
 
 assign b2_coeff = {{{MULTIPLIER_BITWIDTH-REG_BITWIDTH{b2_reg_i[REG_BITWIDTH-1]}}}, b2_reg_i};
 assign b1_coeff = {{{MULTIPLIER_BITWIDTH-REG_BITWIDTH{b1_reg_i[REG_BITWIDTH-1]}}}, b1_reg_i};

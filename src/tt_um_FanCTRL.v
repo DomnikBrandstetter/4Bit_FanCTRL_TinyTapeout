@@ -1,6 +1,6 @@
 `default_nettype none
-//`include "FanCTRL.v"
-//`include "decoder.v"
+`include "FanCTRL.v"
+`include "decoder.v"
 // external clock is 10MHz
 
 module tt_um_FanCTRL #( parameter PID_CLK_DIV = 17'd99_999, PWM_CLK_DIV = 4'd13 ) (
