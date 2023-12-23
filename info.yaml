@@ -7,10 +7,6 @@ project:
 # Source files must be in ./src and you must list each source file separately
   source_files:        
     - tt_um_FanCTRL.v
-    - decoder.v
-    - FanCTRL.v
-    - PID_core.v
-    - PWM_controller.v
   top_module:  "tt_um_FanCTRL"      # Put the name of your top module here, must start with "tt_um_". Make it unique by including your github username
 
 # How many tiles your design occupies? A single tile is about 167x108 uM.
