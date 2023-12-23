@@ -1,6 +1,20 @@
+// Copyright 2023 Dominik Brandstetter
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE−2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 `include "BIT_MUL.v"
 
-module Fan_PID_core #(parameter ADC_BITWIDTH = 8, REG_BITWIDTH = 32, FRAC_BITWIDTH = 30, CLK_DIV_MULTIPLIER = 50)(
+module PID_core #(parameter ADC_BITWIDTH = 8, REG_BITWIDTH = 32, FRAC_BITWIDTH = 30, CLK_DIV_MULTIPLIER = 50)(
     input wire clk_i,
     input wire rstn_i,
     input wire clk_en_PID_i,
@@ -16,38 +30,47 @@ module Fan_PID_core #(parameter ADC_BITWIDTH = 8, REG_BITWIDTH = 32, FRAC_BITWID
     output wire signed [ADC_BITWIDTH:0] out_Val_o
 );
 
-localparam PID_STAGES_BITWIDTH = 3; //5 Multiplications -> 6 Stages
+localparam PID_STAGES_BITWIDTH = 3;    // 5 multiplications -> 6 Stages
+localparam ADDITIONAL_RESULT_BITS = 3; // required if the controller overshoots
 
-localparam MULTIPLIER_BITWIDTH = FRAC_BITWIDTH + ADC_BITWIDTH + 3; // #2 Add + Signed
-localparam RESULT_BITWIDTH = 2*MULTIPLIER_BITWIDTH;//FRAC_BITWIDTH + ADC_BITWIDTH + REG_BITWIDTH + 6;   //+6 = 5 Add + Signed
-
+//calculate constants and Bitwidth (add +1 Bit for signed)
+localparam MULTIPLIER_BITWIDTH = REG_BITWIDTH + ADC_BITWIDTH + 1; 
+localparam RESULT_BITWIDTH = 2 * MULTIPLIER_BITWIDTH;
 localparam MAX_VAL_BITWIDTH =  2 * FRAC_BITWIDTH + ADC_BITWIDTH + 1;
-localparam signed [RESULT_BITWIDTH-1:0]MAX_VALUE = (2 ** (MAX_VAL_BITWIDTH-1)) - 1;  
-localparam signed [RESULT_BITWIDTH-1:0]MIN_VALUE = -(2 ** (MAX_VAL_BITWIDTH-1)); 
-//localparam [MULTIPLIER_BITWIDTH-ADC_BITWIDTH-1:0]ZEROMASK = 0;
-//localparam RESULT_BITWIDTH = ADC_BITWIDTH + 2 * FRAC_BITWIDTH + 5; //4x Additionen + Signed
 
-reg [PID_STAGES_BITWIDTH-1:0] pipeStage;
+localparam signed [RESULT_BITWIDTH-1:0]MAX_PID_VALUE = (2 ** (MAX_VAL_BITWIDTH + ADDITIONAL_RESULT_BITS)) - 1;  
+localparam signed [RESULT_BITWIDTH-1:0]MIN_PID_VALUE = -(2 ** (MAX_VAL_BITWIDTH + ADDITIONAL_RESULT_BITS)); 
+localparam signed [RESULT_BITWIDTH-1:0]MAX_OUT_VALUE = (2 ** (ADC_BITWIDTH+ADDITIONAL_RESULT_BITS-1)) - 1;  
+localparam signed [RESULT_BITWIDTH-1:0]MIN_OUT_VALUE = -(2 ** (ADC_BITWIDTH+ADDITIONAL_RESULT_BITS-1)); 
+
+reg  MUL_Start_STRB;
 wire MUL_Done_STRB;
-wire signed[RESULT_BITWIDTH-1:0] MUL_out;
-wire signed[MULTIPLIER_BITWIDTH-1:0] MUL_a;
-wire signed[MULTIPLIER_BITWIDTH-1:0] MUL_b;
+reg MulResult_Flag;
+reg [PID_STAGES_BITWIDTH-1:0] pipeStage;
+reg signed [ADC_BITWIDTH+ADDITIONAL_RESULT_BITS:0] out_Val;
+
+reg signed  [MULTIPLIER_BITWIDTH-1:0] error_Val_sreg[2:0];
+reg signed  [RESULT_BITWIDTH-1:0] out_Val_sreg[1:0];
+reg signed [RESULT_BITWIDTH-1:0] result_Val;
 
 wire [MULTIPLIER_BITWIDTH-1:0] SET_Val;
 wire [MULTIPLIER_BITWIDTH-1:0] ADC_Val;
 wire signed [MULTIPLIER_BITWIDTH-1:0] frac_ADC_Val;
 wire signed [MULTIPLIER_BITWIDTH-1:0] frac_SET_Val;
 wire signed [MULTIPLIER_BITWIDTH-1:0] error_Val;
-reg signed  [MULTIPLIER_BITWIDTH-1:0] error_Val_sreg[2:0];
-reg signed  [RESULT_BITWIDTH-1:0] out_Val_sreg[1:0];
-reg signed [RESULT_BITWIDTH-1:0] result_Val;
 
-//localparam constantWithOnes = {RESULT_BITWIDTH{1'b1}};
+wire signed [RESULT_BITWIDTH-1:0] MUL_out;
+wire signed [RESULT_BITWIDTH-1:0] MUL_a;
+wire signed [RESULT_BITWIDTH-1:0] MUL_b;
 
-reg MUL_Start_STRB;
-reg MulResult_Flag;
+wire signed [RESULT_BITWIDTH-1:0] b2_coeff;
+wire signed [RESULT_BITWIDTH-1:0] b1_coeff;
+wire signed [RESULT_BITWIDTH-1:0] b0_coeff;
+wire signed [RESULT_BITWIDTH-1:0] a1_coeff;
+wire signed [RESULT_BITWIDTH-1:0] a0_coeff;
 
-BIT_Multiplier #(.N (MULTIPLIER_BITWIDTH), .CLK_DIV_MULTIPLIER(CLK_DIV_MULTIPLIER)) MUL (
+//Module Instantiation of BIT_MUL.v
+BIT_MUL #(.N (MULTIPLIER_BITWIDTH), .CLK_DIV_MULTIPLIER(CLK_DIV_MULTIPLIER)) MUL (
     .clk_i (clk_i),
     .rstn_i (rstn_i),
     .MUL_Start_STRB_i (MUL_Start_STRB),
@@ -57,37 +80,25 @@ BIT_Multiplier #(.N (MULTIPLIER_BITWIDTH), .CLK_DIV_MULTIPLIER(CLK_DIV_MULTIPLIE
     .out_o (MUL_out)
     );
 
+//assignments for shifting and scaling Bit-vectors
 assign ADC_Val = {{MULTIPLIER_BITWIDTH-ADC_BITWIDTH{1'b0}}, ADC_value_i};
 assign frac_ADC_Val = ADC_Val <<< FRAC_BITWIDTH;
 assign SET_Val = {{MULTIPLIER_BITWIDTH-ADC_BITWIDTH{1'b0}}, SET_value_i}; 
 assign frac_SET_Val = SET_Val <<< FRAC_BITWIDTH;
 assign error_Val = frac_SET_Val - frac_ADC_Val;
 
-assign out_Val_o = out_Val_sreg[0][MAX_VAL_BITWIDTH-1:2*FRAC_BITWIDTH]; 
-
-wire signed [MULTIPLIER_BITWIDTH-1:0] b2_coeff;
-wire signed [MULTIPLIER_BITWIDTH-1:0] b1_coeff;
-wire signed [MULTIPLIER_BITWIDTH-1:0] b0_coeff;
-wire signed [MULTIPLIER_BITWIDTH-1:0] a1_coeff;
-wire signed [MULTIPLIER_BITWIDTH-1:0] a0_coeff;
-
-wire signed [RESULT_BITWIDTH-1:0] out_Val_shift_m1;
-wire signed [RESULT_BITWIDTH-1:0] out_Val_shift_m2;
-
-assign b2_coeff = {{{MULTIPLIER_BITWIDTH-REG_BITWIDTH{b2_reg_i[REG_BITWIDTH-1]}}}, b2_reg_i};
-assign b1_coeff = {{{MULTIPLIER_BITWIDTH-REG_BITWIDTH{b1_reg_i[REG_BITWIDTH-1]}}}, b1_reg_i};
-assign b0_coeff = {{{MULTIPLIER_BITWIDTH-REG_BITWIDTH{b0_reg_i[REG_BITWIDTH-1]}}}, b0_reg_i};
-assign a1_coeff = {{{MULTIPLIER_BITWIDTH-REG_BITWIDTH{a1_reg_i[REG_BITWIDTH-1]}}}, a1_reg_i};
-assign a0_coeff = {{{MULTIPLIER_BITWIDTH-REG_BITWIDTH{a0_reg_i[REG_BITWIDTH-1]}}}, a0_reg_i};
-
-assign out_Val_shift_m1 = out_Val_sreg[0] >>> FRAC_BITWIDTH;
-assign out_Val_shift_m2 = out_Val_sreg[1] >>> FRAC_BITWIDTH;  
+assign b2_coeff = {{{RESULT_BITWIDTH-REG_BITWIDTH{b2_reg_i[REG_BITWIDTH-1]}}}, b2_reg_i};
+assign b1_coeff = {{{RESULT_BITWIDTH-REG_BITWIDTH{b1_reg_i[REG_BITWIDTH-1]}}}, b1_reg_i};
+assign b0_coeff = {{{RESULT_BITWIDTH-REG_BITWIDTH{b0_reg_i[REG_BITWIDTH-1]}}}, b0_reg_i};
+assign a1_coeff = {{{RESULT_BITWIDTH-REG_BITWIDTH{a1_reg_i[REG_BITWIDTH-1]}}}, a1_reg_i};
+assign a0_coeff = {{{RESULT_BITWIDTH-REG_BITWIDTH{a0_reg_i[REG_BITWIDTH-1]}}}, a0_reg_i};
 
 assign MUL_a = get_Multiplier(pipeStage, b0_coeff, b1_coeff, b2_coeff, -a0_coeff, -a1_coeff);
-assign MUL_b = get_Multiplier(pipeStage, error_Val_sreg[2], error_Val_sreg[1], error_Val_sreg[0], out_Val_shift_m2[MULTIPLIER_BITWIDTH-1:0], out_Val_shift_m1[MULTIPLIER_BITWIDTH-1:0]);
-//assign MUL_a = get_Multiplier(pipeStage, b0_reg_i, b1_reg_i, b2_reg_i, -a0_reg_i, -a1_reg_i);
-//assign MUL_b = get_Multiplier(pipeStage, error_Val_sreg[2], error_Val_sreg[1], error_Val_sreg[0], out_Val_sreg[1] >>> FRAC_BITWIDTH, out_Val_sreg[0] >>> FRAC_BITWIDTH);
+assign MUL_b = get_Multiplier(pipeStage, error_Val_sreg[2], error_Val_sreg[1], error_Val_sreg[0], out_Val_sreg[1] >>> FRAC_BITWIDTH, out_Val_sreg[0] >>> FRAC_BITWIDTH);
 
+assign out_Val_o = out_Val[ADC_BITWIDTH+ADDITIONAL_RESULT_BITS-1:ADDITIONAL_RESULT_BITS-1]; 
+
+//shift Comb
 always @(posedge clk_i) begin
 
     if (!rstn_i) begin
@@ -96,22 +107,36 @@ always @(posedge clk_i) begin
         error_Val_sreg[2] <= 0;    
         out_Val_sreg[0]   <= 0;
         out_Val_sreg[1]   <= 0;
+        out_Val           <= 0;
     end else if(clk_en_PID_i && pipeStage == 0) begin
         error_Val_sreg[0] <= error_Val;  
         error_Val_sreg[1] <= error_Val_sreg[0];
         error_Val_sreg[2] <= error_Val_sreg[1];
         out_Val_sreg[1]   <= out_Val_sreg[0];
 
-        if(result_Val >= MAX_VALUE) begin
-            out_Val_sreg[0] <= MAX_VALUE;
-        end else if(result_Val <= MIN_VALUE) begin
-            out_Val_sreg[0] <= MIN_VALUE;
+        //limit MAX/MIN result values
+        if(result_Val >= MAX_PID_VALUE) begin
+            out_Val_sreg[0] <= MAX_PID_VALUE;
+        end else if(result_Val <= MIN_PID_VALUE) begin
+            out_Val_sreg[0] <= MIN_PID_VALUE;
         end else begin
             out_Val_sreg[0] <= result_Val;
+        end
+
+        //limit MAX/MIN of output
+        if(out_Val >= MAX_OUT_VALUE) begin
+            out_Val <= MAX_OUT_VALUE;
+        end else if(out_Val <= MIN_OUT_VALUE) begin
+            out_Val <= MIN_OUT_VALUE;
+        end else begin
+            out_Val <= result_Val[MAX_VAL_BITWIDTH+ADDITIONAL_RESULT_BITS-1:2*FRAC_BITWIDTH];
         end
     end 
 end
 
+//6-pipe stages for multiplications
+//pipeStage = 0   -> IDLE
+//pipeStage = 1-5 -> multiply
 always @(posedge clk_i) begin
 
     if (!rstn_i) begin
@@ -123,6 +148,7 @@ always @(posedge clk_i) begin
     end
 end
 
+//build sum of multiplications and genrate strobes
 always @(posedge clk_i) begin
 
     if (!rstn_i) begin
@@ -130,7 +156,6 @@ always @(posedge clk_i) begin
         MUL_Start_STRB <= 0;
         MulResult_Flag <= 0;
     end else if(clk_en_PID_i) begin
-        //result_Val <= (pipeStage == 0)? 0 : result_Val;
         MUL_Start_STRB <= 1;
         MulResult_Flag <= 0;
     end else if (!MulResult_Flag && MUL_Done_STRB && pipeStage == 1) begin
@@ -146,9 +171,9 @@ always @(posedge clk_i) begin
     end
 end
 
-function signed[MULTIPLIER_BITWIDTH-1:0] get_Multiplier; 
+function signed[RESULT_BITWIDTH-1:0] get_Multiplier; 
 input [PID_STAGES_BITWIDTH-1:0] x;
-input signed[MULTIPLIER_BITWIDTH-1:0] Multiplier_1, Multiplier_2, Multiplier_3, Multiplier_4, Multiplier_5;
+input signed[RESULT_BITWIDTH-1:0] Multiplier_1, Multiplier_2, Multiplier_3, Multiplier_4, Multiplier_5;
     begin
         case(x)
             1 : begin 
