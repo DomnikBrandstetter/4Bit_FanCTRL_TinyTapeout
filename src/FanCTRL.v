@@ -57,11 +57,11 @@ localparam [3:0] MODE_RUN    = 4'hA;
 localparam [3:0] MODE_CONFIG = 4'hC;
 
 //calculate constant
-localparam PID_CLK_DIV = (CLK_EN_FREQ / (PID_STAGES * PID_FREQ)) - 1;
-localparam PID_COUNTER_BITWIDTH = log2(PID_CLK_DIV+1); 
-localparam CLK_DIV_MULTIPLIER = (PID_CLK_DIV + 1) / (2 * (REG_BITWIDTH + ADC_BITWIDTH + 1) + MIN_MUL_TICKS);
-localparam PWM_CLK_DIV = (CLK_EN_FREQ / PWM_FREQ) - 1;
-localparam PWM_COUNTER_BITWIDTH = log2(PWM_CLK_DIV+1); 
+localparam PID_CLK_DIV = $rtoi(CLK_EN_FREQ / (PID_STAGES * PID_FREQ)) - 1;
+localparam PID_COUNTER_BITWIDTH = $rtoi(log2(PID_CLK_DIV+1)); 
+localparam CLK_DIV_MULTIPLIER = $rtoi((PID_CLK_DIV + 1) / (2 * (REG_BITWIDTH + ADC_BITWIDTH + 1) + MIN_MUL_TICKS));
+localparam PWM_CLK_DIV = $rtoi((CLK_EN_FREQ / PWM_FREQ) - 1);
+localparam PWM_COUNTER_BITWIDTH = $rtoi(log2(PWM_CLK_DIV+1)); 
 
 reg [PID_COUNTER_BITWIDTH-1:0] PID_clk_div_counterValue;
 reg [PWM_COUNTER_BITWIDTH-1:0] PWM_clk_div_counterValue;
@@ -73,8 +73,8 @@ wire signed [ADC_BITWIDTH-1:0] PWM_counterValue;
 wire clk_en_PID;
 wire clk_en_PWM;
 
-assign clk_en_PID = (PID_clk_div_counterValue == PID_CLK_DIV)? 'b1 : 'b0;
-assign clk_en_PWM = (PWM_clk_div_counterValue == PWM_CLK_DIV)? 'b1 : 'b0;
+assign clk_en_PID = (PID_clk_div_counterValue == PID_CLK_DIV[PID_COUNTER_BITWIDTH-1:0])? 'b1 : 'b0;
+assign clk_en_PWM = (PWM_clk_div_counterValue == PWM_CLK_DIV[PWM_COUNTER_BITWIDTH-1:0])? 'b1 : 'b0;
 assign state_o = (config_en_i)? MODE_CONFIG : MODE_RUN;
 
 assign PID_Val_o = PID_Val;
@@ -112,7 +112,7 @@ always @(posedge clk_i) begin
 
     if (!rstn_i) begin
         PID_clk_div_counterValue <= 0;
-    end else if (clk_en_i && PID_clk_div_counterValue == PID_CLK_DIV) begin
+    end else if (clk_en_i && PID_clk_div_counterValue == PID_CLK_DIV[PID_COUNTER_BITWIDTH-1:0]) begin
         PID_clk_div_counterValue <= 0;
     end else if (clk_en_i) begin
         PID_clk_div_counterValue <= PID_clk_div_counterValue + 1;
@@ -124,7 +124,7 @@ always @(posedge clk_i) begin
 
     if (!rstn_i) begin
         PWM_clk_div_counterValue <= 0;
-    end else if (clk_en_i && PWM_clk_div_counterValue == PWM_CLK_DIV) begin
+    end else if (clk_en_i && PWM_clk_div_counterValue == PWM_CLK_DIV[PWM_COUNTER_BITWIDTH-1:0]) begin
         PWM_clk_div_counterValue <= 0;
     end else if (clk_en_i) begin
         PWM_clk_div_counterValue <= PWM_clk_div_counterValue + 1;

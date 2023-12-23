@@ -34,14 +34,14 @@ reg [COUNTER_BITWIDTH-1:0] MulCounter;
 reg [CLK_DIV_MULTIPLIER_BITWIDTH-1:0] clkCounterValue;
 
 assign out_o = out_reg;
-assign MUL_Done_STRB_o = (MUL_Done_STRB_reg == 0 && {{(32-COUNTER_BITWIDTH){1'b0}}, MulCounter} == (2 * N) && clkCounterValue == CLK_DIV_MULTIPLIER)? 1'b1 : 1'b0;
+assign MUL_Done_STRB_o = (MUL_Done_STRB_reg == 0 && {{(32-COUNTER_BITWIDTH){1'b0}}, MulCounter} == (2 * N) && clkCounterValue == CLK_DIV_MULTIPLIER[CLK_DIV_MULTIPLIER_BITWIDTH-1:0])? 1'b1 : 1'b0;
 
 // CLK-Divider for building sum of multipliers
 always @(posedge clk_i) begin
 
     if (!rstn_i) begin
         clkCounterValue  <= 0;
-    end else if(MUL_Start_STRB_i || clkCounterValue == CLK_DIV_MULTIPLIER) begin
+    end else if(MUL_Start_STRB_i || clkCounterValue == CLK_DIV_MULTIPLIER[CLK_DIV_MULTIPLIER_BITWIDTH-1:0]) begin
         clkCounterValue <= 0;
     end else begin
        clkCounterValue <= clkCounterValue + 1;
@@ -57,10 +57,10 @@ always @(posedge clk_i) begin
     end else if(MUL_Start_STRB_i) begin
         MulCounter  <= 0;
         MUL_Done_STRB_reg <= 0;
-    end else if({{(32-COUNTER_BITWIDTH){1'b0}}, MulCounter} < (2 * N) && clkCounterValue == CLK_DIV_MULTIPLIER) begin
+    end else if({{(32-COUNTER_BITWIDTH){1'b0}}, MulCounter} < (2 * N) && clkCounterValue == CLK_DIV_MULTIPLIER[CLK_DIV_MULTIPLIER_BITWIDTH-1:0]) begin
         MulCounter <= MulCounter + 1;
         MUL_Done_STRB_reg <= 0;
-    end else if({{(32-COUNTER_BITWIDTH){1'b0}}, MulCounter} < (2 * N) && clkCounterValue == CLK_DIV_MULTIPLIER) begin
+    end else if({{(32-COUNTER_BITWIDTH){1'b0}}, MulCounter} < (2 * N) && clkCounterValue == CLK_DIV_MULTIPLIER[CLK_DIV_MULTIPLIER_BITWIDTH-1:0]) begin
         MUL_Done_STRB_reg <= 1;
     end 
 end
@@ -78,7 +78,7 @@ always @(posedge clk_i) begin
         b_in_reg <= b_i;
 
     // build sum of multipliers and shift
-    end else if({{(32-COUNTER_BITWIDTH){1'b0}}, MulCounter} < (2 * N) * N && clkCounterValue == CLK_DIV_MULTIPLIER) begin
+    end else if({{(32-COUNTER_BITWIDTH){1'b0}}, MulCounter} < (2 * N) * N && clkCounterValue == CLK_DIV_MULTIPLIER[CLK_DIV_MULTIPLIER_BITWIDTH-1:0]) begin
         if(b_in_reg[0]==1) begin
         out_reg <= out_reg + a_in_reg;
         end	
