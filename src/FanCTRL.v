@@ -70,13 +70,15 @@ reg [ADC_BITWIDTH-1:0] ADC_value;
 reg [ADC_BITWIDTH-1:0] SET_value;
 wire signed [ADC_BITWIDTH  :0] PID_Val;
 wire signed [ADC_BITWIDTH-1:0] PWM_counterValue;
+wire clk_en_PID;
+wire clk_en_PWM;
 
 assign clk_en_PID = (PID_clk_div_counterValue == PID_CLK_DIV)? 'b1 : 'b0;
 assign clk_en_PWM = (PWM_clk_div_counterValue == PWM_CLK_DIV)? 'b1 : 'b0;
 assign state_o = (config_en_i)? MODE_CONFIG : MODE_RUN;
 
 assign PID_Val_o = PID_Val;
-assign PWM_counterValue = (PID_Val < 0)? $unsigned(PID_Val[ADC_BITWIDTH-1:0]) : {(ADC_BITWIDTH-1){1'b0}};
+assign PWM_counterValue = (PID_Val < 0)? $unsigned(PID_Val[ADC_BITWIDTH-1:0]) : {(ADC_BITWIDTH){1'b0}};
 
 PWM_controller #(.COUNTER_BITWIDTH (ADC_BITWIDTH)) PWM(
     .clk_i (clk_i),

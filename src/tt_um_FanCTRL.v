@@ -32,11 +32,11 @@ localparam ADC_BITWIDTH = 8;
 
 // PID - Parameter
 localparam FRAC_BITWIDTH = 35;
-localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b2 = 39'd894865903170;
-localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b1 = 39'd371285683310;
-localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b0 = 39'd889839149940;
+localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b2 = 39'd89486590317;
+localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b1 = 39'd37128568331;
+localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b0 = 39'd88983914994;
 localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_a1 = 39'd483077041442;
-localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_a0 = 39'd323190340780;
+localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_a0 = 39'd32319034078;
 
 // //PI - Parameter
 // localparam FRAC_BITWIDTH = 13;
@@ -64,8 +64,8 @@ FanCTRL #(.ADC_BITWIDTH (ADC_BITWIDTH), .REG_BITWIDTH (REG_BITWIDTH+FRAC_BITWIDT
     .clk_en_i (clk),
     
     //Data-Interface
-    .ADC_value_i (uio_in),
-    .SET_value_i (uio_in),
+    .ADC_value_i (ui_in),
+    .SET_value_i (ui_in),
     .PWM_periodCounterValue_i (PWM_PERIOD_COUNTER),
     .PWM_minCounterValue_i (PWM_MIN_FAN_SPEED),
 
@@ -88,7 +88,8 @@ FanCTRL #(.ADC_BITWIDTH (ADC_BITWIDTH), .REG_BITWIDTH (REG_BITWIDTH+FRAC_BITWIDT
 
 // use bidirectionals as inputs
 assign uio_oe = 8'b00000000;
-assign dataVaild_STRB = uio_in[0];
+assign uio_out = 8'b00000000;
+assign dataVaild_STRB = uio_in[0] & ena;
 assign config_en = uio_in[1];
 
 assign uo_out[6:0] = led_out;
