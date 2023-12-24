@@ -62,7 +62,7 @@ wire PWM_pin;
 wire dataVaild_STRB;
 wire config_en;
 wire [ADC_BITWIDTH:0] PID_Val;
-wire [ADC_BITWIDTH:0] sevenSegVal;
+wire [ADC_BITWIDTH-1:0] sevenSegVal;
 
 wire [6:0] led_out;
 

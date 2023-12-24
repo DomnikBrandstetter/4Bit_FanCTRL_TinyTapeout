@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-`include "PWM_controller.v"
+//`include "PWM_controller.v"
 `include "PID_core.v"
 
 module FanCTRL #(parameter ADC_BITWIDTH = 8, REG_BITWIDTH = 32, FRAC_BITWIDTH = 30)(
