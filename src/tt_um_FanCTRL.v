@@ -14,7 +14,7 @@
 
 `default_nettype none
 `include "FanCTRL.v"
-//`include "decoder.v"
+`include "decoder.v"
 
 module tt_um_FanCTRL (
     input  wire [7:0] ui_in,    // Dedicated inputs               - (0-7) ADC/SET DATA IN 
@@ -61,8 +61,9 @@ localparam [ADC_BITWIDTH-1:0] PWM_MIN_FAN_SPEED = 3;//12;//65;
 wire PWM_pin;
 wire dataVaild_STRB;
 wire config_en;
+wire [ADC_BITWIDTH:0] PID_Val;
+wire [ADC_BITWIDTH:0] sevenSegVal;
 
-wire [3:0] sevenSegState;
 wire [6:0] led_out;
 
 FanCTRL #(.ADC_BITWIDTH (ADC_BITWIDTH), .REG_BITWIDTH (REG_BITWIDTH+FRAC_BITWIDTH), .FRAC_BITWIDTH (FRAC_BITWIDTH)) FAN (
@@ -90,20 +91,24 @@ FanCTRL #(.ADC_BITWIDTH (ADC_BITWIDTH), .REG_BITWIDTH (REG_BITWIDTH+FRAC_BITWIDT
     .a0_i (PID_a0),
            
     .PWM_pin_o (PWM_pin),
-    .PID_Val_o (),
-    .state_o (sevenSegState)
+    .PID_Val_o (PID_Val),
+    .state_o ()
     );
 
 // use bidirectionals as inputs
 assign uio_oe = 8'b00000000;
 assign uio_out = 8'b00000000;
-//assign dataVaild_STRB = uio_in[0] & ena;
-//assign config_en = uio_in[1];
+assign dataVaild_STRB = uio_in[0] & ena;
+assign config_en = uio_in[1];
+
+
+ 
+assign sevenSegVal = (PID_Val[ADC_BITWIDTH] == 1)? $unsigned(PID_Val[ADC_BITWIDTH-1:0]) : {(ADC_BITWIDTH){1'b0}};
 
 assign uo_out[6:0] = 7'b0000000;//led_out;
 assign uo_out[7] = PWM_pin;
 
 // segment display -> C for config mode / A for run mode
-//seg7 seg7(.counter(sevenSegState), .segments(led_out));
+seg7 seg7(.counter(sevenSegVal), .segments(led_out));
 
 endmodule

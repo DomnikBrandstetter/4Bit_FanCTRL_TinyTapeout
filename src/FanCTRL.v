@@ -48,7 +48,7 @@ module FanCTRL #(parameter ADC_BITWIDTH = 8, REG_BITWIDTH = 32, FRAC_BITWIDTH = 
 localparam MIN_MUL_TICKS = 30;
 localparam PID_STAGES = 5; 
 
-localparam CLK_EN_FREQ = 10e6; // 10 MHz
+localparam CLK_EN_FREQ = 1e6; // 1 MHz
 localparam PID_FREQ    = 1;//100;  // 100 Hz // use 10 kHz for simulation
 localparam PWM_FREQ    = 25e3; // 25 kHz
 
@@ -74,21 +74,22 @@ wire clk_en_PID;
 wire clk_en_PWM;
 
 assign clk_en_PID = (PID_clk_div_counterValue == PID_CLK_DIV[PID_COUNTER_BITWIDTH-1:0])? 'b1 : 'b0;
-assign clk_en_PWM = (PWM_clk_div_counterValue == PWM_CLK_DIV[PWM_COUNTER_BITWIDTH-1:0])? 'b1 : 'b0;
+//assign clk_en_PWM = (PWM_clk_div_counterValue == PWM_CLK_DIV[PWM_COUNTER_BITWIDTH-1:0])? 'b1 : 'b0;
 assign state_o = (config_en_i)? MODE_CONFIG : MODE_RUN;
 
 assign PID_Val_o = PID_Val;
-assign PWM_counterValue = (PID_Val[ADC_BITWIDTH] == 1)? $unsigned(PID_Val[ADC_BITWIDTH-1:0]) : {(ADC_BITWIDTH){1'b0}};
+//assign PWM_counterValue = (PID_Val[ADC_BITWIDTH] == 1)? $unsigned(PID_Val[ADC_BITWIDTH-1:0]) : {(ADC_BITWIDTH){1'b0}};
+assign PWM_pin_o = 0;
 
-PWM_controller #(.COUNTER_BITWIDTH (ADC_BITWIDTH)) PWM(
-    .clk_i (clk_i),
-    .clk_en_i (clk_en_PWM),
-    .rstn_i (rstn_i),
-    .counterValue_i (PWM_counterValue),
-    .minCounterValue_i (PWM_minCounterValue_i),
-    .periodCounterValue_i (PWM_periodCounterValue_i),
-    .PWM_pin_o (PWM_pin_o)
-);
+//PWM_controller #(.COUNTER_BITWIDTH (ADC_BITWIDTH)) PWM(
+//    .clk_i (clk_i),
+ //   .clk_en_i (clk_en_PWM),
+//    .rstn_i (rstn_i),
+//    .counterValue_i (PWM_counterValue),
+//    .minCounterValue_i (PWM_minCounterValue_i),
+//    .periodCounterValue_i (PWM_periodCounterValue_i),
+//    .PWM_pin_o (PWM_pin_o)
+//);
 
 PID_core #(.ADC_BITWIDTH (ADC_BITWIDTH), .REG_BITWIDTH (REG_BITWIDTH), .FRAC_BITWIDTH (FRAC_BITWIDTH), .CLK_DIV_MULTIPLIER(CLK_DIV_MULTIPLIER)) PID(
 
@@ -120,16 +121,16 @@ always @(posedge clk_i) begin
 end
 
 //CLK-Divider for PWM-controller (25 kHz)
-always @(posedge clk_i) begin
-
-    if (!rstn_i) begin
-        PWM_clk_div_counterValue <= 0;
-    end else if (clk_en_i && PWM_clk_div_counterValue == PWM_CLK_DIV[PWM_COUNTER_BITWIDTH-1:0]) begin
-        PWM_clk_div_counterValue <= 0;
-    end else if (clk_en_i) begin
-        PWM_clk_div_counterValue <= PWM_clk_div_counterValue + 1;
-    end
-end
+//always @(posedge clk_i) begin
+//
+//    if (!rstn_i) begin
+//        PWM_clk_div_counterValue <= 0;
+//    end else if (clk_en_i && PWM_clk_div_counterValue == PWM_CLK_DIV[PWM_COUNTER_BITWIDTH-1:0]) begin
+//        PWM_clk_div_counterValue <= 0;
+//    end else if (clk_en_i) begin
+//        PWM_clk_div_counterValue <= PWM_clk_div_counterValue + 1;
+//    end
+//end
 
 //store Values if data is valid
 //always @(posedge clk_i) begin
