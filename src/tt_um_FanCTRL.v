@@ -73,7 +73,7 @@ FanCTRL #(.ADC_BITWIDTH (ADC_BITWIDTH), .REG_BITWIDTH (REG_BITWIDTH+FRAC_BITWIDT
     
     //Data-Interface
     .ADC_value_i (ui_in[ADC_BITWIDTH-1:0]),
-    .SET_value_i (ui_in[ADC_BITWIDTH-1:0]),
+    .SET_value_i (uio_in[ADC_BITWIDTH+1:2]),
     .PWM_periodCounterValue_i (PWM_PERIOD_COUNTER),
     .PWM_minCounterValue_i (PWM_MIN_FAN_SPEED),
 

@@ -95,8 +95,8 @@ PID_core #(.ADC_BITWIDTH (ADC_BITWIDTH), .REG_BITWIDTH (REG_BITWIDTH), .FRAC_BIT
     .clk_i (clk_i),
     .rstn_i (rstn_i),
     .clk_en_PID_i (clk_en_PID),
-    .ADC_value_i (ADC_value),
-    .SET_value_i (SET_value),
+    .ADC_value_i (ADC_value_i),
+    .SET_value_i (SET_value_i),
 
     .a0_reg_i (a0_i),
     .a1_reg_i (a1_i),
@@ -132,17 +132,17 @@ always @(posedge clk_i) begin
 end
 
 //store Values if data is valid
-always @(posedge clk_i) begin
+//always @(posedge clk_i) begin
 
-    if (!rstn_i) begin
-        ADC_value <= 0;
-        SET_value <= 0;
-    end else if (config_en_i & dataVaild_STRB_i) begin
-        SET_value <= SET_value_i;
-    end else if (!config_en_i & dataVaild_STRB_i) begin
-        ADC_value <= ADC_value_i;
-    end
-end
+ //   if (!rstn_i) begin
+ //       ADC_value <= 0;
+ //       SET_value <= 0;
+  //  end else if (config_en_i & dataVaild_STRB_i) begin
+ //       SET_value <= SET_value_i;
+  //  end else if (!config_en_i & dataVaild_STRB_i) begin
+  //      ADC_value <= ADC_value_i;
+ //   end
+//end
 
 function integer log2;
    input [31:0] value;
