@@ -28,7 +28,7 @@ module tt_um_FanCTRL (
 );
 
 localparam REG_BITWIDTH = 4; // >= 4
-localparam ADC_BITWIDTH = 6;
+localparam ADC_BITWIDTH = 4;
 
 // // PID - Parameter -> 100 Hz -> uses 240% Util
 // localparam FRAC_BITWIDTH = 35;
@@ -55,8 +55,8 @@ localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_a1 =  10'd0;
 localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_a0 = -10'd64;
 
 //Setup PWM
-localparam [ADC_BITWIDTH:0] PWM_PERIOD_COUNTER =  76;//320;
-localparam [ADC_BITWIDTH-1:0] PWM_MIN_FAN_SPEED = 12;//65;
+localparam [ADC_BITWIDTH:0] PWM_PERIOD_COUNTER =  19;//76;//320;
+localparam [ADC_BITWIDTH-1:0] PWM_MIN_FAN_SPEED = 3;//12;//65;
 
 wire PWM_pin;
 wire dataVaild_STRB;
