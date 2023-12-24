@@ -14,7 +14,7 @@
 
 `default_nettype none
 `include "FanCTRL.v"
-//`include "decoder.v"
+`include "decoder.v"
 
 module tt_um_FanCTRL (
     input  wire [7:0] ui_in,    // Dedicated inputs               - (0-7) ADC/SET DATA IN 
@@ -100,10 +100,10 @@ assign uio_out = 8'b00000000;
 assign dataVaild_STRB = uio_in[0] & ena;
 assign config_en = uio_in[1];
 
-assign uo_out[6:0] = 7'b0000000;//led_out;
+assign uo_out[6:0] = led_out;
 assign uo_out[7] = PWM_pin;
 
 // segment display -> C for config mode / A for run mode
-//seg7 seg7(.counter(sevenSegState), .segments(led_out));
+seg7 seg7(.counter(sevenSegState), .segments(led_out));
 
 endmodule

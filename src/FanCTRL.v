@@ -60,7 +60,7 @@ localparam [3:0] MODE_CONFIG = 4'hC;
 localparam PID_CLK_DIV = $rtoi(CLK_EN_FREQ / (PID_STAGES * PID_FREQ)) - 1;
 localparam PID_COUNTER_BITWIDTH = $rtoi(log2(PID_CLK_DIV+1)); 
 localparam CLK_DIV_MULTIPLIER = $rtoi((PID_CLK_DIV + 1) / (2 * (REG_BITWIDTH + ADC_BITWIDTH + 1) + MIN_MUL_TICKS));
-localparam PWM_CLK_DIV = $rtoi((CLK_EN_FREQ / PWM_FREQ) - 1);
+localparam PWM_CLK_DIV = 5;//$rtoi((CLK_EN_FREQ / PWM_FREQ) - 1);
 localparam PWM_COUNTER_BITWIDTH = $rtoi(log2(PWM_CLK_DIV+1)); 
 
 reg [PID_COUNTER_BITWIDTH-1:0] PID_clk_div_counterValue;
