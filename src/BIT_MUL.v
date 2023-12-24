@@ -48,7 +48,7 @@ always @(posedge clk_i) begin
     end
 end
 
-// Strobe gen when multiplication fnished
+// Strobe gen when multiplication is finished
 always @(posedge clk_i) begin
 
     if (!rstn_i) begin

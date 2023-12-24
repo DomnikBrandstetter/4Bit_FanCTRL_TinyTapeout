@@ -64,14 +64,14 @@ localparam PWM_CLK_DIV = 5;//$rtoi((CLK_EN_FREQ / (PWM_FREQ)) - 1);
 localparam PWM_COUNTER_BITWIDTH = $rtoi(log2(PWM_CLK_DIV+1)); 
 
 reg [PID_COUNTER_BITWIDTH-1:0] PID_clk_div_counterValue;
-reg [PWM_COUNTER_BITWIDTH-1:0] PWM_clk_div_counterValue;
+//reg [PWM_COUNTER_BITWIDTH-1:0] PWM_clk_div_counterValue;
 
-reg [ADC_BITWIDTH-1:0] ADC_value;
-reg [ADC_BITWIDTH-1:0] SET_value;
+//reg [ADC_BITWIDTH-1:0] ADC_value;
+//reg [ADC_BITWIDTH-1:0] SET_value;
 wire signed [ADC_BITWIDTH  :0] PID_Val;
-wire signed [ADC_BITWIDTH-1:0] PWM_counterValue;
+//wire signed [ADC_BITWIDTH-1:0] PWM_counterValue;
 wire clk_en_PID;
-wire clk_en_PWM;
+//wire clk_en_PWM;
 
 assign clk_en_PID = (PID_clk_div_counterValue == PID_CLK_DIV[PID_COUNTER_BITWIDTH-1:0])? 'b1 : 'b0;
 //assign clk_en_PWM = (PWM_clk_div_counterValue == PWM_CLK_DIV[PWM_COUNTER_BITWIDTH-1:0])? 'b1 : 'b0;

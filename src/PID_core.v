@@ -157,7 +157,7 @@ always @(posedge clk_i) begin
     end
 end
 
-//build sum of multiplications and genrate strobes
+//build sum of multiplications and gen strobes
 always @(posedge clk_i) begin
 
     if (!rstn_i) begin
