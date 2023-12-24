@@ -63,6 +63,10 @@ wire signed [RESULT_BITWIDTH-1:0] MUL_out;
 wire signed [RESULT_BITWIDTH-1:0] MUL_a;
 wire signed [RESULT_BITWIDTH-1:0] MUL_b;
 
+wire signed [RESULT_BITWIDTH-1:0] error_Val_scaled_m0;
+wire signed [RESULT_BITWIDTH-1:0] error_Val_scaled_m1;
+wire signed [RESULT_BITWIDTH-1:0] error_Val_scaled_m2;
+
 wire signed [RESULT_BITWIDTH-1:0] b2_coeff;
 wire signed [RESULT_BITWIDTH-1:0] b1_coeff;
 wire signed [RESULT_BITWIDTH-1:0] b0_coeff;
@@ -92,10 +96,6 @@ assign b1_coeff = {{{RESULT_BITWIDTH-REG_BITWIDTH{b1_reg_i[REG_BITWIDTH-1]}}}, b
 assign b0_coeff = {{{RESULT_BITWIDTH-REG_BITWIDTH{b0_reg_i[REG_BITWIDTH-1]}}}, b0_reg_i};
 assign a1_coeff = {{{RESULT_BITWIDTH-REG_BITWIDTH{a1_reg_i[REG_BITWIDTH-1]}}}, a1_reg_i};
 assign a0_coeff = {{{RESULT_BITWIDTH-REG_BITWIDTH{a0_reg_i[REG_BITWIDTH-1]}}}, a0_reg_i};
-
-wire signed [RESULT_BITWIDTH-1:0] error_Val_scaled_m0;
-wire signed [RESULT_BITWIDTH-1:0] error_Val_scaled_m1;
-wire signed [RESULT_BITWIDTH-1:0] error_Val_scaled_m2;
 
 assign error_Val_scaled_m0 = {{RESULT_BITWIDTH-MULTIPLIER_BITWIDTH{error_Val_sreg[0][MULTIPLIER_BITWIDTH-1]}}, error_Val_sreg[0]};
 assign error_Val_scaled_m1 = {{RESULT_BITWIDTH-MULTIPLIER_BITWIDTH{error_Val_sreg[1][MULTIPLIER_BITWIDTH-1]}}, error_Val_sreg[1]};

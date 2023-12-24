@@ -78,7 +78,7 @@ assign clk_en_PWM = (PWM_clk_div_counterValue == PWM_CLK_DIV[PWM_COUNTER_BITWIDT
 assign state_o = (config_en_i)? MODE_CONFIG : MODE_RUN;
 
 assign PID_Val_o = PID_Val;
-assign PWM_counterValue = (PID_Val < 0)? $unsigned(PID_Val[ADC_BITWIDTH-1:0]) : {(ADC_BITWIDTH){1'b0}};
+assign PWM_counterValue = (PID_Val[ADC_BITWIDTH] == 1)? $unsigned(PID_Val[ADC_BITWIDTH-1:0]) : {(ADC_BITWIDTH){1'b0}};
 
 PWM_controller #(.COUNTER_BITWIDTH (ADC_BITWIDTH)) PWM(
     .clk_i (clk_i),

@@ -57,10 +57,10 @@ always @(posedge clk_i) begin
     end else if(MUL_Start_STRB_i) begin
         MulCounter  <= 0;
         MUL_Done_STRB_reg <= 0;
-    end else if({{(32-COUNTER_BITWIDTH){1'b0}}, MulCounter} < (2 * N) && clkCounterValue == CLK_DIV_MULTIPLIER[CLK_DIV_MULTIPLIER_BITWIDTH-1:0]) begin
+    end else if({{(32-COUNTER_BITWIDTH){1'b0}}, MulCounter} != (2 * N) && clkCounterValue == CLK_DIV_MULTIPLIER[CLK_DIV_MULTIPLIER_BITWIDTH-1:0]) begin
         MulCounter <= MulCounter + 1;
         MUL_Done_STRB_reg <= 0;
-    end else if({{(32-COUNTER_BITWIDTH){1'b0}}, MulCounter} < (2 * N) && clkCounterValue == CLK_DIV_MULTIPLIER[CLK_DIV_MULTIPLIER_BITWIDTH-1:0]) begin
+    end else if({{(32-COUNTER_BITWIDTH){1'b0}}, MulCounter} != (2 * N) && clkCounterValue == CLK_DIV_MULTIPLIER[CLK_DIV_MULTIPLIER_BITWIDTH-1:0]) begin
         MUL_Done_STRB_reg <= 1;
     end 
 end
@@ -78,12 +78,12 @@ always @(posedge clk_i) begin
         b_in_reg <= b_i;
 
     // build sum of multipliers and shift
-    end else if({{(32-COUNTER_BITWIDTH){1'b0}}, MulCounter} < (2 * N) * N && clkCounterValue == CLK_DIV_MULTIPLIER[CLK_DIV_MULTIPLIER_BITWIDTH-1:0]) begin
+    end else if({{(32-COUNTER_BITWIDTH){1'b0}}, MulCounter} != (2 * N) && clkCounterValue == CLK_DIV_MULTIPLIER[CLK_DIV_MULTIPLIER_BITWIDTH-1:0]) begin
         if(b_in_reg[0]==1) begin
         out_reg <= out_reg + a_in_reg;
         end	
         a_in_reg <= a_in_reg <<< 1;
-		b_in_reg <= b_in_reg >>> 1;
+	b_in_reg <= b_in_reg >>> 1;
     end
 end
 
