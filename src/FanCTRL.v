@@ -49,7 +49,7 @@ localparam MIN_MUL_TICKS = 30;
 localparam PID_STAGES = 5; 
 
 localparam CLK_EN_FREQ = 10e6; // 10 MHz
-localparam PID_FREQ    = 1;//100;  // 100 Hz // use 10 kHz for simulation
+localparam PID_FREQ    = 100;//100;  // 100 Hz // use 10 kHz for simulation
 localparam PWM_FREQ    = 25e3; // 25 kHz
 
 //status FANCTRL

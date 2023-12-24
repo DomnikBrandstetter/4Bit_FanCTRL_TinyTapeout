@@ -46,7 +46,7 @@ localparam ADC_BITWIDTH = 6;
 // localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_a1 = 18'd0;      //$rtoi(0                     * (2 ** FRAC_BITWIDTH)); 
 // localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_a0 = 18'd245760; //$rtoi(-1.0                  * (2 ** FRAC_BITWIDTH));
 
-//PI - Parameter -> 1 Hz -> uses 130% Util
+//PI - Parameter -> 1 Hz -> uses 110% Util / 6 Bit ADC
 localparam FRAC_BITWIDTH = 6;
 localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b2 =  10'd9;  
 localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b1 =  10'd0;    
