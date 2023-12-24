@@ -31,7 +31,7 @@ module PID_core #(parameter ADC_BITWIDTH = 8, REG_BITWIDTH = 32, FRAC_BITWIDTH =
 );
 
 localparam PID_STAGES_BITWIDTH = 3;    // 5 multiplications -> 6 Stages
-localparam ADDITIONAL_RESULT_BITS = 3; // required if the controller overshoots
+localparam ADDITIONAL_RESULT_BITS = 1; // required if the controller overshoots
 
 //calculate constants and Bitwidth (add +1 Bit for signed)
 localparam MULTIPLIER_BITWIDTH = REG_BITWIDTH + ADC_BITWIDTH + 1; 

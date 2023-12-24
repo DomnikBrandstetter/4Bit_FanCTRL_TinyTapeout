@@ -27,7 +27,7 @@ module tt_um_FanCTRL (
     input  wire       rst_n     // reset_n - low to reset
 );
 
-localparam REG_BITWIDTH = 4; // >= 4
+localparam REG_BITWIDTH = 3; // >= 4
 localparam ADC_BITWIDTH = 4;
 
 // // PID - Parameter -> 100 Hz -> uses 240% Util
@@ -48,11 +48,11 @@ localparam ADC_BITWIDTH = 4;
 
 //PI - Parameter -> 1 Hz -> uses 110% Util / 6 Bit ADC
 localparam FRAC_BITWIDTH = 6;
-localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b2 =  10'd9;  
-localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b1 =  10'd0;    
-localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b0 = -10'd8; 
-localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_a1 =  10'd0;     
-localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_a0 = -10'd64;
+localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b2 =  9'd9;  
+localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b1 =  9'd0;    
+localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b0 = -9'd8; 
+localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_a1 =  9'd0;     
+localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_a0 = -9'd64;
 
 //Setup PWM
 localparam [ADC_BITWIDTH:0] PWM_PERIOD_COUNTER =  19;//76;//320;
