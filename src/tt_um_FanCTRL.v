@@ -49,9 +49,9 @@ localparam ADC_BITWIDTH = 4;
 //PI - Parameter -> 1 Hz -> uses 110% Util / 6 Bit ADC
 localparam FRAC_BITWIDTH = 6;
 localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b2 =  9'd9;  
-localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b1 =  9'd0;    
+localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b1 =  9'd15;    
 localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b0 = -9'd8; 
-localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_a1 =  9'd0;     
+localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_a1 =  9'd3;     
 localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_a0 = -9'd64;
 
 //Setup PWM
