@@ -2,7 +2,7 @@
 `default_nettype none
 `include "tt_um_FanCTRL.v"
 
-module tt_FanCTRL_tb;
+module tt_um_FanCTRL_tb;
 
 // //PT2-Glied 8-Bit PID 100Hz
 // localparam ADC_BITWIDTH = 8;
