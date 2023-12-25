@@ -4,6 +4,13 @@
 
 module tt_um_FanCTRL_tb;
 
+    // this part dumps the trace to a vcd file that can be viewed with GTKWave
+    initial begin
+        $dumpfile ("tb.vcd");
+        $dumpvars (0, tt_um_FanCTRL_tb);
+        #1;
+    end
+
 // //PT2-Glied 8-Bit PID 100Hz
 // localparam ADC_BITWIDTH = 8;
 // localparam real B2_PT2 = 5.76318539197624e-06;   
@@ -118,14 +125,15 @@ initial begin
     #11;
     rstn_tb = 1;
 
-    #100000000;
+    //#100000000;
+    #10000
 
     PT2_enable = 1;
     rstn_tb = 0;
     #10;
     rstn_tb = 1; 
-    #150000000 $finish;
-    //#30000 $finish;
+    //#150000000 $finish;
+    #30000 $finish;
 end
 
 function integer log2;
