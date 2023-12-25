@@ -9,7 +9,7 @@ TOPLEVEL_LANG ?= verilog
 ifneq ($(GATES),yes)
 
 # this is the only part you should need to modify: #$(PWD)/tt_um_FanCTRL.v $(PWD)/sevenSegDisplay.v $(PWD)/FanCTRL.v $(PWD)/PID_core.v $(PWD)/PWM_controller.v
-VERILOG_SOURCES += $(PWD)/tt_um_FanCTRL_tb.v 
+VERILOG_SOURCES += $(PWD)/tb.v $(PWD)/tt_um_FanCTRL.v 
 
 else
 
@@ -23,11 +23,11 @@ VERILOG_SOURCES += $(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/verilog/primitiv
 VERILOG_SOURCES += $(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/verilog/sky130_fd_sc_hd.v
 
 # this gets copied in by the GDS action workflow
-VERILOG_SOURCES += $(PWD)/tt_um_FanCTRL_tb.v $(PWD)/gate_level_netlist.v
+VERILOG_SOURCES += $(PWD)/tb.v $(PWD)/gate_level_netlist.v
 endif
 
 # TOPLEVEL is the name of the toplevel module in your Verilog or VHDL file
-TOPLEVEL = tt_um_FanCTRL_tb
+TOPLEVEL = tb
 
 # MODULE is the basename of the Python test file
 MODULE = test
