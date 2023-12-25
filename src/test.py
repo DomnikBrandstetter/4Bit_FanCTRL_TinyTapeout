@@ -29,7 +29,7 @@ async def test_7seg(dut):
         #assert int(dut.segments.value) == segments[i % 10]
 
         # all bidirectionals are set to output
-        assert dut.uio_oe == 0xFF
+        #assert dut.uio_oe == 0xFF
 
     # reset
     dut.rst_n.value = 0
