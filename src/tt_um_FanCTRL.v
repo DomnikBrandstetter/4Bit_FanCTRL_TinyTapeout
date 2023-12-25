@@ -60,7 +60,7 @@ FanCTRL #(.ADC_BITWIDTH (ADC_BITWIDTH), .REG_BITWIDTH (REG_BITWIDTH+FRAC_BITWIDT
     //The module requires a 1 MHz clk_en signal to achieve a 200 ms time step
     .clk_i (clk),
     .rstn_i (rst_n),
-    .clk_en_i (clk),
+    .clk_en_i (1'b1),
     
     //Data-Interface
     .ADC_value_i (ui_in[ADC_BITWIDTH-1:0]),
