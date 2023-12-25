@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-`include "PWM_controller.v"
+//`include "PWM_controller.v"
 `include "PID_core.v"
 
 module FanCTRL #(parameter ADC_BITWIDTH = 8, REG_BITWIDTH = 32, FRAC_BITWIDTH = 30)(
@@ -61,7 +61,7 @@ assign clk_en_PID = (PID_clk_div_counterValue == PID_CLK_DIV[PID_COUNTER_BITWIDT
 assign PID_Val_o = PID_Val;
 
 // disable PWM pin
-// assign PWM_pin_o = 0;
+assign PWM_pin_o = 0;
 
 PID_core #(.ADC_BITWIDTH (ADC_BITWIDTH), .REG_BITWIDTH (REG_BITWIDTH), .FRAC_BITWIDTH (FRAC_BITWIDTH), .CLK_DIV_MULTIPLIER(CLK_DIV_MULTIPLIER)) PID(
 

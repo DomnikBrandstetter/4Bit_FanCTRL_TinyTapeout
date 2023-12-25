@@ -63,6 +63,10 @@ wire signed [RESULT_BITWIDTH-1:0] MUL_out;
 wire signed [RESULT_BITWIDTH-1:0] MUL_a;
 wire signed [RESULT_BITWIDTH-1:0] MUL_b;
 
+wire signed [RESULT_BITWIDTH-1:0] error_Val_scaled_m0;
+wire signed [RESULT_BITWIDTH-1:0] error_Val_scaled_m1;
+wire signed [RESULT_BITWIDTH-1:0] error_Val_scaled_m2;
+
 wire signed [RESULT_BITWIDTH-1:0] b2_coeff;
 wire signed [RESULT_BITWIDTH-1:0] b1_coeff;
 wire signed [RESULT_BITWIDTH-1:0] b0_coeff;
@@ -87,6 +91,10 @@ assign SET_Val = {{MULTIPLIER_BITWIDTH-ADC_BITWIDTH{1'b0}}, SET_value_i};
 assign frac_SET_Val = SET_Val <<< FRAC_BITWIDTH;
 assign error_Val = frac_SET_Val - frac_ADC_Val;
 
+assign error_Val_scaled_m0 = {{RESULT_BITWIDTH-MULTIPLIER_BITWIDTH{error_Val_sreg[0][MULTIPLIER_BITWIDTH-1]}}, error_Val_sreg[0]};
+assign error_Val_scaled_m1 = {{RESULT_BITWIDTH-MULTIPLIER_BITWIDTH{error_Val_sreg[1][MULTIPLIER_BITWIDTH-1]}}, error_Val_sreg[1]};
+assign error_Val_scaled_m2 = {{RESULT_BITWIDTH-MULTIPLIER_BITWIDTH{error_Val_sreg[2][MULTIPLIER_BITWIDTH-1]}}, error_Val_sreg[2]};
+
 assign b2_coeff = {{{RESULT_BITWIDTH-REG_BITWIDTH{b2_reg_i[REG_BITWIDTH-1]}}}, b2_reg_i};
 assign b1_coeff = {{{RESULT_BITWIDTH-REG_BITWIDTH{b1_reg_i[REG_BITWIDTH-1]}}}, b1_reg_i};
 assign b0_coeff = {{{RESULT_BITWIDTH-REG_BITWIDTH{b0_reg_i[REG_BITWIDTH-1]}}}, b0_reg_i};
@@ -94,7 +102,7 @@ assign a1_coeff = {{{RESULT_BITWIDTH-REG_BITWIDTH{a1_reg_i[REG_BITWIDTH-1]}}}, a
 assign a0_coeff = {{{RESULT_BITWIDTH-REG_BITWIDTH{a0_reg_i[REG_BITWIDTH-1]}}}, a0_reg_i};
 
 assign MUL_a = get_Multiplier(pipeStage, b0_coeff, b1_coeff, b2_coeff, -a0_coeff, -a1_coeff);
-assign MUL_b = get_Multiplier(pipeStage, error_Val_sreg[2], error_Val_sreg[1], error_Val_sreg[0], out_Val_sreg[1] >>> FRAC_BITWIDTH, out_Val_sreg[0] >>> FRAC_BITWIDTH); 
+assign MUL_b = get_Multiplier(pipeStage, error_Val_scaled_m2, error_Val_scaled_m1, error_Val_scaled_m0, out_Val_sreg[1] >>> FRAC_BITWIDTH, out_Val_sreg[0] >>> FRAC_BITWIDTH); 
 
 assign out_Val_o = out_Val; 
 

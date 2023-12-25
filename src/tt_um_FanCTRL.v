@@ -14,7 +14,7 @@
 
 `default_nettype none
 `include "FanCTRL.v"
-`include "decoder.v"
+`include "sevenSegDisplay.v"
 
 module tt_um_FanCTRL (
     input  wire [7:0] ui_in,    // Dedicated inputs               - (0-7) ADC 0-3 / SET 7-4 -> DATA IN 

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-module PWM_controller #(parameter COUNTER_BITWIDTH)(
+module PWM_controller #(parameter COUNTER_BITWIDTH = 5)(
     input wire clk_i,
     input wire clk_en_i,
     input wire rstn_i,
