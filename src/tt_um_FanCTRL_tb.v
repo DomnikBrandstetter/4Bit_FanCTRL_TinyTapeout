@@ -79,7 +79,7 @@ always @(posedge clk_tb, rstn_tb) begin
     end
 end
 
-tt_um_FanCTRL #() tt_um_FAN (
+tt_um_FanCTRL_DomnikBrandstetter #() tt_um_FAN (
     `ifdef GL_TEST
         .VPWR( 1'b1),
         .VGND( 1'b0),
