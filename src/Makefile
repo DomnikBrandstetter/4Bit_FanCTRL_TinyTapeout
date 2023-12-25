@@ -9,7 +9,7 @@ TOPLEVEL_LANG ?= verilog
 ifneq ($(GATES),yes)
 
 # this is the only part you should need to modify: #$(PWD)/tt_um_FanCTRL.v $(PWD)/sevenSegDisplay.v $(PWD)/FanCTRL.v $(PWD)/PID_core.v $(PWD)/PWM_controller.v
-VERILOG_SOURCES += $(PWD)/tt_um_FanCTRL.v 
+VERILOG_SOURCES += $(PWD)/tt_um_FanCTRL_tb.v 
 
 else
 
@@ -27,7 +27,7 @@ VERILOG_SOURCES += $(PWD)/tt_um_FanCTRL_tb.v $(PWD)/gate_level_netlist.v
 endif
 
 # TOPLEVEL is the name of the toplevel module in your Verilog or VHDL file
-TOPLEVEL = tt_um_FanCTRL
+TOPLEVEL = tt_um_FanCTRL_tb
 
 # MODULE is the basename of the Python test file
 MODULE = test
