@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//`include "PWM_controller.v"
+`include "PWM_controller.v"
 `include "PID_core.v"
 
 module FanCTRL #(parameter ADC_BITWIDTH = 8, REG_BITWIDTH = 32, FRAC_BITWIDTH = 30)(
@@ -61,7 +61,7 @@ assign clk_en_PID = (PID_clk_div_counterValue == PID_CLK_DIV[PID_COUNTER_BITWIDT
 assign PID_Val_o = PID_Val;
 
 // disable PWM pin
-assign PWM_pin_o = 0;
+// assign PWM_pin_o = 0;
 
 PID_core #(.ADC_BITWIDTH (ADC_BITWIDTH), .REG_BITWIDTH (REG_BITWIDTH), .FRAC_BITWIDTH (FRAC_BITWIDTH), .CLK_DIV_MULTIPLIER(CLK_DIV_MULTIPLIER)) PID(
 
@@ -94,38 +94,38 @@ end
 
 //------------ PWM section --------------//
 
-// //calculate constant
-// localparam PWM_CLK_DIV = 1; // -> 22 - 33 kHz for for min fan speed => 0 - 8
-// localparam PWM_COUNTER_BITWIDTH = $rtoi(log2(PWM_CLK_DIV+1)); 
+//calculate constant
+localparam PWM_CLK_DIV = 1; // -> 22 - 33 kHz for for min fan speed => 0 - 8
+localparam PWM_COUNTER_BITWIDTH = $rtoi(log2(PWM_CLK_DIV+1)); 
 
-// reg [PWM_COUNTER_BITWIDTH-1:0] PWM_clk_div_counterValue;
-// wire signed [ADC_BITWIDTH-1:0] PWM_counterValue;
-// wire clk_en_PWM;
+reg [PWM_COUNTER_BITWIDTH-1:0] PWM_clk_div_counterValue;
+wire signed [ADC_BITWIDTH-1:0] PWM_counterValue;
+wire clk_en_PWM;
 
-// assign clk_en_PWM = (PWM_clk_div_counterValue == PWM_CLK_DIV[PWM_COUNTER_BITWIDTH-1:0])? 'b1 : 'b0;
-// assign PWM_counterValue = (PID_Val[ADC_BITWIDTH] == 1)? (0 - PID_Val[ADC_BITWIDTH-1:0]) : {(ADC_BITWIDTH){1'b0}};
+assign clk_en_PWM = (PWM_clk_div_counterValue == PWM_CLK_DIV[PWM_COUNTER_BITWIDTH-1:0])? 'b1 : 'b0;
+assign PWM_counterValue = (PID_Val[ADC_BITWIDTH] == 1)? (0 - PID_Val[ADC_BITWIDTH-1:0]) : {(ADC_BITWIDTH){1'b0}};
 
-// PWM_controller #(.COUNTER_BITWIDTH (ADC_BITWIDTH)) PWM(
-//    .clk_i (clk_i),
-//    .clk_en_i (clk_en_PWM),
-//    .rstn_i (rstn_i),
-//    .counterValue_i (PWM_counterValue),
-//    .minCounterValue_i (PWM_minCounterValue_i),
-//    .periodCounterValue_i (PWM_periodCounterValue_i),
-//    .PWM_pin_o (PWM_pin_o)
-// );
+PWM_controller #(.COUNTER_BITWIDTH (ADC_BITWIDTH)) PWM(
+   .clk_i (clk_i),
+   .clk_en_i (clk_en_PWM),
+   .rstn_i (rstn_i),
+   .counterValue_i (PWM_counterValue),
+   .minCounterValue_i (PWM_minCounterValue_i),
+   .periodCounterValue_i (PWM_periodCounterValue_i),
+   .PWM_pin_o (PWM_pin_o)
+  );
 
-// // CLK-Divider for PWM-controller 
-// always @(posedge clk_i) begin
+// CLK-Divider for PWM-controller 
+always @(posedge clk_i) begin
 
-//    if (!rstn_i) begin
-//        PWM_clk_div_counterValue <= 0;
-//    end else if (clk_en_i && PWM_clk_div_counterValue == PWM_CLK_DIV[PWM_COUNTER_BITWIDTH-1:0]) begin
-//        PWM_clk_div_counterValue <= 0;
-//    end else if (clk_en_i) begin
-//        PWM_clk_div_counterValue <= PWM_clk_div_counterValue + 1;
-//    end
-// end
+   if (!rstn_i) begin
+       PWM_clk_div_counterValue <= 0;
+    end else if (clk_en_i && PWM_clk_div_counterValue == PWM_CLK_DIV[PWM_COUNTER_BITWIDTH-1:0]) begin
+       PWM_clk_div_counterValue <= 0;
+    end else if (clk_en_i) begin
+       PWM_clk_div_counterValue <= PWM_clk_div_counterValue + 1;
+    end
+end
 
 function integer log2;
    input [31:0] value;
