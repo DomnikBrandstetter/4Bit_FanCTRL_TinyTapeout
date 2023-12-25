@@ -39,18 +39,18 @@ localparam RESULT_BITWIDTH = 2 * MULTIPLIER_BITWIDTH;
 localparam MAX_VAL_BITWIDTH =  2 * FRAC_BITWIDTH + ADC_BITWIDTH + 1;
 
 localparam signed [RESULT_BITWIDTH-1:0]MAX_PID_VALUE = (2 ** (MAX_VAL_BITWIDTH + ADDITIONAL_RESULT_BITS)) - 1;  
-localparam signed [RESULT_BITWIDTH-1:0]MIN_PID_VALUE = -(2 ** (MAX_VAL_BITWIDTH + ADDITIONAL_RESULT_BITS)); 
-localparam signed [ADC_BITWIDTH+ADDITIONAL_RESULT_BITS:0]MAX_OUT_VALUE = (2 ** (ADC_BITWIDTH+ADDITIONAL_RESULT_BITS-1)) - 1;  
-localparam signed [ADC_BITWIDTH+ADDITIONAL_RESULT_BITS:0]MIN_OUT_VALUE = -(2 ** (ADC_BITWIDTH+ADDITIONAL_RESULT_BITS-1)); 
+localparam signed [RESULT_BITWIDTH-1:0]MIN_PID_VALUE = -(2 ** (MAX_VAL_BITWIDTH + ADDITIONAL_RESULT_BITS)) + 1; 
+localparam signed [RESULT_BITWIDTH-1:0]MAX_OUT_VALUE = (2 ** (ADC_BITWIDTH)) - 1;  
+localparam signed [RESULT_BITWIDTH-1:0]MIN_OUT_VALUE = -(2 ** (ADC_BITWIDTH)) + 1; 
 
 reg  MUL_Start_STRB;
 wire MUL_Done_STRB;
 reg MulResult_Flag;
 reg [PID_STAGES_BITWIDTH-1:0] pipeStage;
-reg signed [ADC_BITWIDTH+ADDITIONAL_RESULT_BITS:0] out_Val;
+reg signed [ADC_BITWIDTH:0] out_Val;
 
-reg signed [MULTIPLIER_BITWIDTH-1:0] error_Val_sreg[2:0];
-reg signed [RESULT_BITWIDTH-1:0] out_Val_sreg[1:0];
+reg signed  [MULTIPLIER_BITWIDTH-1:0] error_Val_sreg[2:0];
+reg signed  [RESULT_BITWIDTH-1:0] out_Val_sreg[1:0];
 reg signed [RESULT_BITWIDTH-1:0] result_Val;
 
 wire [MULTIPLIER_BITWIDTH-1:0] SET_Val;
@@ -62,10 +62,6 @@ wire signed [MULTIPLIER_BITWIDTH-1:0] error_Val;
 wire signed [RESULT_BITWIDTH-1:0] MUL_out;
 wire signed [RESULT_BITWIDTH-1:0] MUL_a;
 wire signed [RESULT_BITWIDTH-1:0] MUL_b;
-
-wire signed [RESULT_BITWIDTH-1:0] error_Val_scaled_m0;
-wire signed [RESULT_BITWIDTH-1:0] error_Val_scaled_m1;
-wire signed [RESULT_BITWIDTH-1:0] error_Val_scaled_m2;
 
 wire signed [RESULT_BITWIDTH-1:0] b2_coeff;
 wire signed [RESULT_BITWIDTH-1:0] b1_coeff;
@@ -97,15 +93,10 @@ assign b0_coeff = {{{RESULT_BITWIDTH-REG_BITWIDTH{b0_reg_i[REG_BITWIDTH-1]}}}, b
 assign a1_coeff = {{{RESULT_BITWIDTH-REG_BITWIDTH{a1_reg_i[REG_BITWIDTH-1]}}}, a1_reg_i};
 assign a0_coeff = {{{RESULT_BITWIDTH-REG_BITWIDTH{a0_reg_i[REG_BITWIDTH-1]}}}, a0_reg_i};
 
-assign error_Val_scaled_m0 = {{RESULT_BITWIDTH-MULTIPLIER_BITWIDTH{error_Val_sreg[0][MULTIPLIER_BITWIDTH-1]}}, error_Val_sreg[0]};
-assign error_Val_scaled_m1 = {{RESULT_BITWIDTH-MULTIPLIER_BITWIDTH{error_Val_sreg[1][MULTIPLIER_BITWIDTH-1]}}, error_Val_sreg[1]};
-assign error_Val_scaled_m2 = {{RESULT_BITWIDTH-MULTIPLIER_BITWIDTH{error_Val_sreg[2][MULTIPLIER_BITWIDTH-1]}}, error_Val_sreg[2]};
-
 assign MUL_a = get_Multiplier(pipeStage, b0_coeff, b1_coeff, b2_coeff, -a0_coeff, -a1_coeff);
-assign MUL_b = get_Multiplier(pipeStage, error_Val_scaled_m2, error_Val_scaled_m1, error_Val_scaled_m0, out_Val_sreg[1] >>> FRAC_BITWIDTH, out_Val_sreg[0] >>> FRAC_BITWIDTH);
-//assign MUL_b = get_Multiplier(pipeStage, error_Val_sreg[2], error_Val_sreg[1], error_Val_sreg[0], out_Val_sreg[1] >>> FRAC_BITWIDTH, out_Val_sreg[0] >>> FRAC_BITWIDTH);
+assign MUL_b = get_Multiplier(pipeStage, error_Val_sreg[2], error_Val_sreg[1], error_Val_sreg[0], out_Val_sreg[1] >>> FRAC_BITWIDTH, out_Val_sreg[0] >>> FRAC_BITWIDTH); 
 
-assign out_Val_o = out_Val[ADC_BITWIDTH+ADDITIONAL_RESULT_BITS-1:ADDITIONAL_RESULT_BITS-1]; 
+assign out_Val_o = out_Val; 
 
 //shift Comb
 always @(posedge clk_i) begin
@@ -132,13 +123,13 @@ always @(posedge clk_i) begin
             out_Val_sreg[0] <= result_Val;
         end
 
-        //limit MAX/MIN of output
-        if(out_Val >= MAX_OUT_VALUE) begin
-            out_Val <= MAX_OUT_VALUE;
-        end else if(out_Val <= MIN_OUT_VALUE) begin
-            out_Val <= MIN_OUT_VALUE;
+        //limit MAX/MIN output
+        if(result_Val > 0 && (result_Val >>> (2 * FRAC_BITWIDTH)) > MAX_OUT_VALUE) begin
+            out_Val <= MAX_OUT_VALUE[ADC_BITWIDTH:0];
+        end else if(result_Val < 0 && (result_Val >>> (2 * FRAC_BITWIDTH)) < MIN_OUT_VALUE) begin
+            out_Val <= MIN_OUT_VALUE[ADC_BITWIDTH:0];
         end else begin
-            out_Val <= result_Val[MAX_VAL_BITWIDTH+ADDITIONAL_RESULT_BITS-1:2*FRAC_BITWIDTH];
+            out_Val <= result_Val[MAX_VAL_BITWIDTH-1:2*FRAC_BITWIDTH];
         end
     end 
 end
@@ -157,7 +148,8 @@ always @(posedge clk_i) begin
     end
 end
 
-//build sum of multiplications and gen strobes
+//multiplier pipeline
+//build sum of multiplications and generate strobes
 always @(posedge clk_i) begin
 
     if (!rstn_i) begin
