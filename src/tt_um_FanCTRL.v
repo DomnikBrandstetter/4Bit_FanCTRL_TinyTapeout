@@ -38,7 +38,7 @@ localparam ADC_BITWIDTH = 4;
 // localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_a1 = 39'd483077041442;
 // localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_a0 = 39'd32319034078;
 
-//PI - Parameter -> 1 Hz -> 1 Hz uses 79% Util / 4 Bit ADC
+//PI - Parameter -> 5 Hz uses 79% Util / 4 Bit ADC
 localparam FRAC_BITWIDTH = 6;
 localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b2 =  8'd94;  
 localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b1 =  8'd0;    
@@ -90,6 +90,7 @@ sevenSegDisplay #() DECODER (
 assign uio_oe = 8'b11111111;
 assign uio_out = {3'b000, PID_Val};
 
+// sevenSeg Display disabled to meet specs
 assign sevenSegVal = 4'hA; //(PID_Val[ADC_BITWIDTH] == 1)? (0 - PID_Val[ADC_BITWIDTH-1:0]) : {(ADC_BITWIDTH){1'b0}};
 
 assign uo_out[6:0] = led_out;
