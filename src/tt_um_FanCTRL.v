@@ -16,7 +16,7 @@
 `include "FanCTRL.v"
 `include "sevenSegDisplay.v"
 
-module tt_um_FanCTRL (
+module tt_um_FanCTRL_DomnikBrandstetter (
     input  wire [7:0] ui_in,    // Dedicated inputs               - (0-7) ADC 0-3 / SET 7-4 -> DATA IN 
     output wire [7:0] uo_out,   // Dedicated outputs              - (0-6) = 7 segment display / 7 = PWM-Pin
     input  wire [7:0] uio_in,   // IOs: Bidirectional Input path  - unused
