@@ -89,8 +89,8 @@ sevenSegDisplay #() DECODER (
 // use bidirectionals ports as output
 assign uio_oe = 8'b11111111;
 assign uio_out = {3'b000, PID_Val};
- 
-assign sevenSegVal = 0;//(PID_Val[ADC_BITWIDTH] == 1)? (0 - PID_Val[ADC_BITWIDTH-1:0]) : {(ADC_BITWIDTH){1'b0}};
+
+assign sevenSegVal = 4'hA; //(PID_Val[ADC_BITWIDTH] == 1)? (0 - PID_Val[ADC_BITWIDTH-1:0]) : {(ADC_BITWIDTH){1'b0}};
 
 assign uo_out[6:0] = led_out;
 assign uo_out[7] = PWM_pin;
