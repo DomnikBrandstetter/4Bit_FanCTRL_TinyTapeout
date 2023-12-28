@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-`include "BIT_MUL.v"
+`include "MUL_ACC.v"
 
 module PID_core #(parameter ADC_BITWIDTH = 8, REG_BITWIDTH = 32, FRAC_BITWIDTH = 30, CLK_DIV_MULTIPLIER = 50)(
     input wire clk_i,
@@ -36,7 +36,7 @@ localparam ADDITIONAL_RESULT_BITS = 1; // required if the controller overshoots
 //calculate constants and Bitwidth (add +1 Bit for signed)
 localparam MULTIPLIER_BITWIDTH = REG_BITWIDTH + ADC_BITWIDTH + 1; 
 localparam RESULT_BITWIDTH = 2 * MULTIPLIER_BITWIDTH;
-localparam MAX_VAL_BITWIDTH =  2 * FRAC_BITWIDTH + ADC_BITWIDTH + 1;
+localparam MAX_VAL_BITWIDTH =  2 * FRAC_BITWIDTH + ADC_BITWIDTH;
 
 localparam signed [RESULT_BITWIDTH-1:0]MAX_PID_VALUE = (2 ** (MAX_VAL_BITWIDTH + ADDITIONAL_RESULT_BITS)) - 1;  
 localparam signed [RESULT_BITWIDTH-1:0]MIN_PID_VALUE = -(2 ** (MAX_VAL_BITWIDTH + ADDITIONAL_RESULT_BITS)) + 1; 
@@ -51,7 +51,6 @@ reg signed [ADC_BITWIDTH:0] out_Val;
 
 reg signed  [MULTIPLIER_BITWIDTH-1:0] error_Val_sreg[2:0];
 reg signed  [RESULT_BITWIDTH-1:0] out_Val_sreg[1:0];
-reg signed [RESULT_BITWIDTH-1:0] result_Val;
 
 wire [MULTIPLIER_BITWIDTH-1:0] SET_Val;
 wire [MULTIPLIER_BITWIDTH-1:0] ADC_Val;
@@ -59,7 +58,8 @@ wire signed [MULTIPLIER_BITWIDTH-1:0] frac_ADC_Val;
 wire signed [MULTIPLIER_BITWIDTH-1:0] frac_SET_Val;
 wire signed [MULTIPLIER_BITWIDTH-1:0] error_Val;
 
-wire signed [RESULT_BITWIDTH-1:0] MUL_out;
+wire signed [RESULT_BITWIDTH-1:0] result_Val;
+wire signed [RESULT_BITWIDTH-1:0] MUL_acc;
 wire signed [RESULT_BITWIDTH-1:0] MUL_a;
 wire signed [RESULT_BITWIDTH-1:0] MUL_b;
 
@@ -74,14 +74,15 @@ wire signed [RESULT_BITWIDTH-1:0] a1_coeff;
 wire signed [RESULT_BITWIDTH-1:0] a0_coeff;
 
 //Module Instantiation of BIT_MUL.v
-BIT_MUL #(.N (MULTIPLIER_BITWIDTH), .CLK_DIV_MULTIPLIER(CLK_DIV_MULTIPLIER)) MUL (
+MUL_ACC #(.N (MULTIPLIER_BITWIDTH), .CLK_DIV_MULTIPLIER(CLK_DIV_MULTIPLIER)) MUL (
     .clk_i (clk_i),
     .rstn_i (rstn_i),
     .MUL_Start_STRB_i (MUL_Start_STRB),
     .MUL_Done_STRB_o (MUL_Done_STRB),
     .a_i (MUL_a),
     .b_i (MUL_b),
-    .out_o (MUL_out)
+    .acc_i (MUL_acc),
+    .out_o (result_Val)
     );
 
 //assignments for shifting and scaling Bit-vectors
@@ -101,6 +102,7 @@ assign b0_coeff = {{{RESULT_BITWIDTH-REG_BITWIDTH{b0_reg_i[REG_BITWIDTH-1]}}}, b
 assign a1_coeff = {{{RESULT_BITWIDTH-REG_BITWIDTH{a1_reg_i[REG_BITWIDTH-1]}}}, a1_reg_i};
 assign a0_coeff = {{{RESULT_BITWIDTH-REG_BITWIDTH{a0_reg_i[REG_BITWIDTH-1]}}}, a0_reg_i};
 
+assign MUL_acc = (pipeStage == 1)? {{RESULT_BITWIDTH-1{1'b0}}} : result_Val;
 assign MUL_a = get_Multiplier(pipeStage, b0_coeff, b1_coeff, b2_coeff, -a0_coeff, -a1_coeff);
 assign MUL_b = get_Multiplier(pipeStage, error_Val_scaled_m2, error_Val_scaled_m1, error_Val_scaled_m0, out_Val_sreg[1] >>> FRAC_BITWIDTH, out_Val_sreg[0] >>> FRAC_BITWIDTH); 
 
@@ -137,14 +139,14 @@ always @(posedge clk_i) begin
         end else if(result_Val < 0 && (result_Val >>> (2 * FRAC_BITWIDTH)) < MIN_OUT_VALUE) begin
             out_Val <= MIN_OUT_VALUE[ADC_BITWIDTH:0];
         end else begin
-            out_Val <= result_Val[MAX_VAL_BITWIDTH-1:2*FRAC_BITWIDTH];
+            out_Val <= result_Val[MAX_VAL_BITWIDTH:2*FRAC_BITWIDTH];
         end
     end 
 end
 
 //6-pipe stages for multiplications
 //pipeStage = 0   -> IDLE
-//pipeStage = 1-5 -> multiply
+//pipeStage = 1-5 -> multiply / accumulate
 always @(posedge clk_i) begin
 
     if (!rstn_i) begin
@@ -156,23 +158,17 @@ always @(posedge clk_i) begin
     end
 end
 
-//multiplier pipeline
+//multiply / accumulate pipeline
 //build sum of multiplications and generate strobes
 always @(posedge clk_i) begin
 
     if (!rstn_i) begin
-        result_Val <= 0;
         MUL_Start_STRB <= 0;
         MulResult_Flag <= 0;
     end else if(clk_en_PID_i) begin
         MUL_Start_STRB <= 1;
         MulResult_Flag <= 0;
-    end else if (!MulResult_Flag && MUL_Done_STRB && pipeStage == 1) begin
-        result_Val <= MUL_out;
-        MUL_Start_STRB <= 0;
-        MulResult_Flag <= 1;
-    end else if (!MulResult_Flag && MUL_Done_STRB && pipeStage != 1) begin
-        result_Val <= result_Val + MUL_out;
+    end else if (!MulResult_Flag && MUL_Done_STRB) begin
         MUL_Start_STRB <= 0;
         MulResult_Flag <= 1;
     end else begin
