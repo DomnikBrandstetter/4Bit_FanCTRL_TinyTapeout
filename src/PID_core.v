@@ -33,11 +33,12 @@ module PID_core #(parameter ADC_BITWIDTH = 8, REG_BITWIDTH = 32, FRAC_BITWIDTH =
 localparam PID_STAGES_BITWIDTH = 3;    // 5 multiplications -> 6 Stages
 localparam ADDITIONAL_RESULT_BITS = 1; // required if the controller overshoots
 
-//calculate constants and Bitwidth (add +1 Bit for signed)
+//Calculate constants and Bitwidth (add +1 Bit for signed)
 localparam MULTIPLIER_BITWIDTH = REG_BITWIDTH + ADC_BITWIDTH + 1; 
 localparam RESULT_BITWIDTH = 2 * MULTIPLIER_BITWIDTH;
 localparam MAX_VAL_BITWIDTH =  2 * FRAC_BITWIDTH + ADC_BITWIDTH;
 
+//Maximum and minimum values for PID and output
 localparam signed [RESULT_BITWIDTH-1:0]MAX_PID_VALUE = (2 ** (MAX_VAL_BITWIDTH + ADDITIONAL_RESULT_BITS)) - 1;  
 localparam signed [RESULT_BITWIDTH-1:0]MIN_PID_VALUE = -(2 ** (MAX_VAL_BITWIDTH + ADDITIONAL_RESULT_BITS)) + 1; 
 localparam signed [RESULT_BITWIDTH-1:0]MAX_OUT_VALUE = (2 ** (ADC_BITWIDTH)) - 1;  
@@ -73,7 +74,7 @@ wire signed [RESULT_BITWIDTH-1:0] b0_coeff;
 wire signed [RESULT_BITWIDTH-1:0] a1_coeff;
 wire signed [RESULT_BITWIDTH-1:0] a0_coeff;
 
-//Module Instantiation of BIT_MUL.v
+//Module Instantiation of BIT_ACC.v
 MUL_ACC #(.N (MULTIPLIER_BITWIDTH), .CLK_DIV_MULTIPLIER(CLK_DIV_MULTIPLIER)) MUL (
     .clk_i (clk_i),
     .rstn_i (rstn_i),
@@ -85,7 +86,7 @@ MUL_ACC #(.N (MULTIPLIER_BITWIDTH), .CLK_DIV_MULTIPLIER(CLK_DIV_MULTIPLIER)) MUL
     .out_o (result_Val)
     );
 
-//assignments for shifting and scaling Bit-vectors
+//Assignments for shifting and scaling bit-vectors
 assign ADC_Val = {{MULTIPLIER_BITWIDTH-ADC_BITWIDTH{1'b0}}, ADC_value_i};
 assign frac_ADC_Val = ADC_Val <<< FRAC_BITWIDTH;
 assign SET_Val = {{MULTIPLIER_BITWIDTH-ADC_BITWIDTH{1'b0}}, SET_value_i}; 
@@ -102,13 +103,14 @@ assign b0_coeff = {{{RESULT_BITWIDTH-REG_BITWIDTH{b0_reg_i[REG_BITWIDTH-1]}}}, b
 assign a1_coeff = {{{RESULT_BITWIDTH-REG_BITWIDTH{a1_reg_i[REG_BITWIDTH-1]}}}, a1_reg_i};
 assign a0_coeff = {{{RESULT_BITWIDTH-REG_BITWIDTH{a0_reg_i[REG_BITWIDTH-1]}}}, a0_reg_i};
 
-assign MUL_acc = (pipeStage == 1)? {{RESULT_BITWIDTH{1'b0}}} : result_Val;
+//Result value of the last multiplication will be fed back into the multiplier to achieve accumulation
+assign MUL_acc = (pipeStage == 1)? {{RESULT_BITWIDTH-1{1'b0}}} : result_Val;
 assign MUL_a = get_Multiplier(pipeStage, b0_coeff, b1_coeff, b2_coeff, -a0_coeff, -a1_coeff);
 assign MUL_b = get_Multiplier(pipeStage, error_Val_scaled_m2, error_Val_scaled_m1, error_Val_scaled_m0, out_Val_sreg[1] >>> FRAC_BITWIDTH, out_Val_sreg[0] >>> FRAC_BITWIDTH); 
 
 assign out_Val_o = out_Val; 
 
-//shift Comb
+//Shift Comb
 always @(posedge clk_i) begin
 
     if (!rstn_i) begin
@@ -124,7 +126,7 @@ always @(posedge clk_i) begin
         error_Val_sreg[2] <= error_Val_sreg[1];
         out_Val_sreg[1]   <= out_Val_sreg[0];
 
-        //limit MAX/MIN result values
+        //Limit MAX/MIN result values
         if(result_Val >= MAX_PID_VALUE) begin
             out_Val_sreg[0] <= MAX_PID_VALUE;
         end else if(result_Val <= MIN_PID_VALUE) begin
@@ -133,7 +135,7 @@ always @(posedge clk_i) begin
             out_Val_sreg[0] <= result_Val;
         end
 
-        //limit MAX/MIN output
+        //Limit MAX/MIN output values
         if(result_Val > 0 && (result_Val >>> (2 * FRAC_BITWIDTH)) > MAX_OUT_VALUE) begin
             out_Val <= MAX_OUT_VALUE[ADC_BITWIDTH:0];
         end else if(result_Val < 0 && (result_Val >>> (2 * FRAC_BITWIDTH)) < MIN_OUT_VALUE) begin
@@ -159,7 +161,6 @@ always @(posedge clk_i) begin
 end
 
 //multiply / accumulate pipeline
-//build sum of multiplications and generate strobes
 always @(posedge clk_i) begin
 
     if (!rstn_i) begin
@@ -176,6 +177,7 @@ always @(posedge clk_i) begin
     end
 end
 
+// Function to select the appropriate multiplier based on the pipeline stage
 function signed[RESULT_BITWIDTH-1:0] get_Multiplier; 
 input [PID_STAGES_BITWIDTH-1:0] x;
 input signed[RESULT_BITWIDTH-1:0] Multiplier_1, Multiplier_2, Multiplier_3, Multiplier_4, Multiplier_5;
@@ -185,7 +187,7 @@ input signed[RESULT_BITWIDTH-1:0] Multiplier_1, Multiplier_2, Multiplier_3, Mult
                 get_Multiplier = Multiplier_1;
             end 
             2 : begin 
-               get_Multiplier = Multiplier_2;
+                get_Multiplier = Multiplier_2;
             end 
             3 : begin 
                 get_Multiplier = Multiplier_3;
