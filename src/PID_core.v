@@ -104,7 +104,7 @@ assign a1_coeff = {{{RESULT_BITWIDTH-REG_BITWIDTH{a1_reg_i[REG_BITWIDTH-1]}}}, a
 assign a0_coeff = {{{RESULT_BITWIDTH-REG_BITWIDTH{a0_reg_i[REG_BITWIDTH-1]}}}, a0_reg_i};
 
 //Result value of the last multiplication will be fed back into the multiplier to achieve accumulation
-assign MUL_acc = (pipeStage == 1)? {{RESULT_BITWIDTH-1{1'b0}}} : result_Val;
+assign MUL_acc = (pipeStage == 1)? {{RESULT_BITWIDTH{1'b0}}} : result_Val;
 assign MUL_a = get_Multiplier(pipeStage, b0_coeff, b1_coeff, b2_coeff, -a0_coeff, -a1_coeff);
 assign MUL_b = get_Multiplier(pipeStage, error_Val_scaled_m2, error_Val_scaled_m1, error_Val_scaled_m0, out_Val_sreg[1] >>> FRAC_BITWIDTH, out_Val_sreg[0] >>> FRAC_BITWIDTH); 
 
