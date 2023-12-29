@@ -61,7 +61,7 @@ always @(posedge clk_i) begin
     end else if({{(32-COUNTER_BITWIDTH){1'b0}}, MulCounter} != (2 * N) && clkCounterValue == CLK_DIV_MULTIPLIER[CLK_DIV_MULTIPLIER_BITWIDTH-1:0]) begin
         MulCounter <= MulCounter + 1;
         MUL_Done_STRB_reg <= 0;
-    end else if({{(32-COUNTER_BITWIDTH){1'b0}}, MulCounter} != (2 * N) && clkCounterValue == CLK_DIV_MULTIPLIER[CLK_DIV_MULTIPLIER_BITWIDTH-1:0]) begin
+    end else if({{(32-COUNTER_BITWIDTH){1'b0}}, MulCounter} == (2 * N) && clkCounterValue == CLK_DIV_MULTIPLIER[CLK_DIV_MULTIPLIER_BITWIDTH-1:0]) begin
         MUL_Done_STRB_reg <= 1;
     end 
 end
