@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-module BIT_MUL #(parameter N = 4, CLK_DIV_MULTIPLIER = 50) (
+module MUL_ACC #(parameter N = 4, CLK_DIV_MULTIPLIER = 50) (
         input wire clk_i,
         input wire rstn_i,
         input wire MUL_Start_STRB_i,
         output wire MUL_Done_STRB_o,
         input wire signed[(N*2)-1:0] a_i,
         input wire signed[(N*2)-1:0] b_i,
+        input wire signed[(N*2)-1:0] acc_i,
         output wire signed[(N*2)-1:0] out_o
 	);
 
@@ -36,7 +37,7 @@ reg [CLK_DIV_MULTIPLIER_BITWIDTH-1:0] clkCounterValue;
 assign out_o = out_reg;
 assign MUL_Done_STRB_o = (MUL_Done_STRB_reg == 0 && {{(32-COUNTER_BITWIDTH){1'b0}}, MulCounter} == (2 * N) && clkCounterValue == CLK_DIV_MULTIPLIER[CLK_DIV_MULTIPLIER_BITWIDTH-1:0])? 1'b1 : 1'b0;
 
-// CLK-Divider for building sum of multipliers
+// CLK-Divider
 always @(posedge clk_i) begin
 
     if (!rstn_i) begin
@@ -48,7 +49,7 @@ always @(posedge clk_i) begin
     end
 end
 
-// Strobe gen when multiplication is finished
+// Strobe gen 
 always @(posedge clk_i) begin
 
     if (!rstn_i) begin
@@ -65,7 +66,7 @@ always @(posedge clk_i) begin
     end 
 end
 
-//COMB multiplier 
+//COMB multiply / accumulate
 always @(posedge clk_i) begin
 
     if (!rstn_i) begin
@@ -73,17 +74,17 @@ always @(posedge clk_i) begin
         a_in_reg <= 0;
 		b_in_reg <= 0;
     end else if(MUL_Start_STRB_i) begin
-        out_reg  <= 0;
+        out_reg  <= acc_i;
         a_in_reg <= a_i;
         b_in_reg <= b_i;
 
-    // build sum of multipliers and shift
+    //multiply / accumulate and shift
     end else if({{(32-COUNTER_BITWIDTH){1'b0}}, MulCounter} != (2 * N) && clkCounterValue == CLK_DIV_MULTIPLIER[CLK_DIV_MULTIPLIER_BITWIDTH-1:0]) begin
         if(b_in_reg[0]==1) begin
         out_reg <= out_reg + a_in_reg;
         end	
         a_in_reg <= a_in_reg <<< 1;
-	b_in_reg <= b_in_reg >>> 1;
+	    b_in_reg <= b_in_reg >>> 1;
     end
 end
 
