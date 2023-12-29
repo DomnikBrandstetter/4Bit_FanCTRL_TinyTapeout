@@ -16,7 +16,7 @@
 `include "PID_core.v"
 
 module FanCTRL #(parameter ADC_BITWIDTH = 8, REG_BITWIDTH = 32, FRAC_BITWIDTH = 30, PID_FREQ = 5)(
-    //The module requires a 10 MHz clk_en signal to achieve a 10 ms time step
+    //The module requires a 1 MHz Clk signal to achieve a 200 ms time step
     input wire clk_i,
     input wire rstn_i,
     input wire clk_en_i,

@@ -53,7 +53,7 @@ FanCTRL #(.ADC_BITWIDTH (ADC_BITWIDTH), .REG_BITWIDTH (REG_BITWIDTH+FRAC_BITWIDT
     //The module requires a 1 MHz clk_en signal to achieve a 200 ms time step
     .clk_i (clk),
     .rstn_i (rst_n),
-    .clk_en_i (clk),
+    .clk_en_i (1'b1),
     
     //Data-Interface
     .ADC_value_i (ui_in[ADC_BITWIDTH-1:0]),
@@ -83,7 +83,7 @@ sevenSegDisplay #() DECODER (
 assign uio_oe = 8'b11111111;
 assign uio_out = {3'b000, PID_Val};
 
-assign uo_out[6:0] = 7'b0000000;//led_out;
+assign uo_out[6:0] = led_out;
 assign uo_out[7] = PWM_pin;
 
 always @(posedge clk) begin
