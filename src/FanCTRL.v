@@ -15,7 +15,7 @@
 `include "PWM_controller.v"
 `include "PID_core.v"
 
-module FanCTRL #(parameter ADC_BITWIDTH = 8, REG_BITWIDTH = 32, FRAC_BITWIDTH = 30)(
+module FanCTRL #(parameter ADC_BITWIDTH = 8, REG_BITWIDTH = 32, FRAC_BITWIDTH = 30, PID_FREQ = 5)(
     //The module requires a 10 MHz clk_en signal to achieve a 10 ms time step
     input wire clk_i,
     input wire rstn_i,
@@ -27,7 +27,7 @@ module FanCTRL #(parameter ADC_BITWIDTH = 8, REG_BITWIDTH = 32, FRAC_BITWIDTH = 
     input wire [ADC_BITWIDTH  :0] PWM_periodCounterValue_i,
     input wire [ADC_BITWIDTH-1:0] PWM_minCounterValue_i,
 
-    //PID-Controller coefficients (time step = Ta = 200 ms) 
+    //PID-Controller coefficients 
     //y[k] = x[k]b2 + x[k-1]b1 + x[k-2]b0 - y[k-1]a1 - y[k-2]a0
     input wire signed [REG_BITWIDTH-1:0] a0_i,
     input wire signed [REG_BITWIDTH-1:0] a1_i,
@@ -43,11 +43,10 @@ module FanCTRL #(parameter ADC_BITWIDTH = 8, REG_BITWIDTH = 32, FRAC_BITWIDTH = 
 localparam MIN_MUL_TICKS = 30;
 localparam PID_STAGES = 5; 
 
-localparam CLK_EN_FREQ = 1e6;  // 1 MHz
-localparam PID_FREQ    = 5;    // 5 Hz 
+localparam CLK_FREQ = 1e6;  // 1 MHz
 
-//calculate constant
-localparam PID_CLK_DIV = $rtoi(CLK_EN_FREQ / (PID_STAGES * PID_FREQ)) - 1;
+//Calculate constants
+localparam PID_CLK_DIV = $rtoi(CLK_FREQ / (PID_STAGES * PID_FREQ)) - 1;
 localparam PID_COUNTER_BITWIDTH = $rtoi(log2(PID_CLK_DIV+1)); 
 localparam CLK_DIV_MULTIPLIER = $rtoi((PID_CLK_DIV + 1) / (2 * (REG_BITWIDTH + ADC_BITWIDTH + 1) + MIN_MUL_TICKS));
 
@@ -59,9 +58,6 @@ wire clk_en_PID;
 
 assign clk_en_PID = (PID_clk_div_counterValue == PID_CLK_DIV[PID_COUNTER_BITWIDTH-1:0])? 'b1 : 'b0;
 assign PID_Val_o = PID_Val;
-
-// disable PWM pin
-// assign PWM_pin_o = 0;
 
 PID_core #(.ADC_BITWIDTH (ADC_BITWIDTH), .REG_BITWIDTH (REG_BITWIDTH), .FRAC_BITWIDTH (FRAC_BITWIDTH), .CLK_DIV_MULTIPLIER(CLK_DIV_MULTIPLIER)) PID(
 
@@ -80,7 +76,7 @@ PID_core #(.ADC_BITWIDTH (ADC_BITWIDTH), .REG_BITWIDTH (REG_BITWIDTH), .FRAC_BIT
     .out_Val_o (PID_Val)
     );
 
-//CLK-Divider for PID (100 Hz) 
+//CLK-Divider for PID 
 always @(posedge clk_i) begin
 
     if (!rstn_i) begin
@@ -94,8 +90,8 @@ end
 
 //------------ PWM section --------------//
 
-//calculate constant
-localparam PWM_CLK_DIV = 1; // -> 22 - 33 kHz for for min fan speed => 0 - 8
+//calculate constants
+localparam PWM_CLK_DIV = 1; // -> 21 - 32 kHz for MIN fan speed => 0% - 33%
 localparam PWM_COUNTER_BITWIDTH = $rtoi(log2(PWM_CLK_DIV+1)); 
 
 reg [PWM_COUNTER_BITWIDTH-1:0] PWM_clk_div_counterValue;
@@ -113,18 +109,18 @@ PWM_controller #(.COUNTER_BITWIDTH (ADC_BITWIDTH)) PWM(
    .minCounterValue_i (PWM_minCounterValue_i),
    .periodCounterValue_i (PWM_periodCounterValue_i),
    .PWM_pin_o (PWM_pin_o)
-  );
+);
 
 // CLK-Divider for PWM-controller 
 always @(posedge clk_i) begin
 
    if (!rstn_i) begin
        PWM_clk_div_counterValue <= 0;
-    end else if (clk_en_i && PWM_clk_div_counterValue == PWM_CLK_DIV[PWM_COUNTER_BITWIDTH-1:0]) begin
+   end else if (clk_en_i && PWM_clk_div_counterValue == PWM_CLK_DIV[PWM_COUNTER_BITWIDTH-1:0]) begin
        PWM_clk_div_counterValue <= 0;
-    end else if (clk_en_i) begin
+   end else if (clk_en_i) begin
        PWM_clk_div_counterValue <= PWM_clk_div_counterValue + 1;
-    end
+   end
 end
 
 function integer log2;
