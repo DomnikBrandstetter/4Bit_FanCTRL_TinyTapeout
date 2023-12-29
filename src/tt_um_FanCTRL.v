@@ -45,7 +45,7 @@ localparam [ADC_BITWIDTH-1:0] PWM_MIN_FAN_SPEED = 3;
 
 wire PWM_pin;
 wire [ADC_BITWIDTH:0] PID_Val;
-wire [ADC_BITWIDTH-1:0] sevenSegVal;
+reg [ADC_BITWIDTH-1:0] sevenSegVal;
 
 wire [6:0] led_out;
 
@@ -82,10 +82,19 @@ sevenSegDisplay #() DECODER (
 // use bidirectionals ports as output
 assign uio_oe = 8'b11111111;
 assign uio_out = {3'b000, PID_Val};
- 
-assign sevenSegVal = (PID_Val[ADC_BITWIDTH] == 1)? (0 - PID_Val[ADC_BITWIDTH-1:0]) : {(ADC_BITWIDTH){1'b0}};
 
 assign uo_out[6:0] = led_out;
 assign uo_out[7] = PWM_pin;
+
+always @(posedge clk) begin
+
+    if (!rst_n) begin
+        sevenSegVal  <= 0;
+    end else if (PID_Val[ADC_BITWIDTH] == 1) begin
+        sevenSegVal <= (0 - PID_Val[ADC_BITWIDTH-1:0]);
+    end else begin
+    	sevenSegVal <= 0;
+    end
+end
 
 endmodule
