@@ -83,7 +83,7 @@ sevenSegDisplay #() DECODER (
 assign uio_oe = 8'b11111111;
 assign uio_out = {3'b000, PID_Val};
 
-assign uo_out[6:0] = led_out;
+assign uo_out[6:0] = 7'b0000000;//led_out;
 assign uo_out[7] = PWM_pin;
 
 always @(posedge clk) begin
