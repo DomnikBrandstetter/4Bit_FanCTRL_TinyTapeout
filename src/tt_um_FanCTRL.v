@@ -30,24 +30,17 @@ module tt_um_FanCTRL_DomnikBrandstetter (
 localparam REG_BITWIDTH = 2; // >= 1
 localparam ADC_BITWIDTH = 4;
 
-// // PID - Parameter -> 100 Hz -> uses 240% Util / 8 Bit ADC
-// localparam FRAC_BITWIDTH = 35;
-// localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b2 = 39'd89486590317;
-// localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b1 = 39'd37128568331;
-// localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b0 = 39'd88983914994;
-// localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_a1 = 39'd483077041442;
-// localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_a0 = 39'd32319034078;
-
-//PI - Parameter -> 5 Hz uses 79% Util / 4 Bit ADC
+// PI - Parameter -> 5 Hz / 4 Bit ADC
+localparam PID_FREQ      = 5;     
 localparam FRAC_BITWIDTH = 6;
-localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b2 =  8'd94;  
-localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b1 =  8'd0;    
-localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b0 = -8'd93; 
-localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_a1 =  8'd0;     
-localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_a0 = -8'd64;
+localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b2 =   8'd94;  
+localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b1 =  -8'd93;   
+localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b0 =   8'b0;
+localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_a1 =  -8'd64;     
+localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_a0 =   8'd0;
 
 //Setup PWM
-localparam [ADC_BITWIDTH:0] PWM_PERIOD_COUNTER =  18; 
+localparam [ADC_BITWIDTH:0] PWM_PERIOD_COUNTER  = 18; 
 localparam [ADC_BITWIDTH-1:0] PWM_MIN_FAN_SPEED = 3; 
 
 wire PWM_pin;
@@ -56,11 +49,11 @@ wire [ADC_BITWIDTH-1:0] sevenSegVal;
 
 wire [6:0] led_out;
 
-FanCTRL #(.ADC_BITWIDTH (ADC_BITWIDTH), .REG_BITWIDTH (REG_BITWIDTH+FRAC_BITWIDTH), .FRAC_BITWIDTH (FRAC_BITWIDTH)) FAN (
+FanCTRL #(.ADC_BITWIDTH (ADC_BITWIDTH), .REG_BITWIDTH (REG_BITWIDTH+FRAC_BITWIDTH), .FRAC_BITWIDTH (FRAC_BITWIDTH), .PID_FREQ (PID_FREQ)) FAN (
     //The module requires a 1 MHz clk_en signal to achieve a 200 ms time step
     .clk_i (clk),
     .rstn_i (rst_n),
-    .clk_en_i (1'b1),
+    .clk_en_i (clk),
     
     //Data-Interface
     .ADC_value_i (ui_in[ADC_BITWIDTH-1:0]),
@@ -68,7 +61,7 @@ FanCTRL #(.ADC_BITWIDTH (ADC_BITWIDTH), .REG_BITWIDTH (REG_BITWIDTH+FRAC_BITWIDT
     .PWM_periodCounterValue_i (PWM_PERIOD_COUNTER),
     .PWM_minCounterValue_i (PWM_MIN_FAN_SPEED),
 
-    //PID-Controller coefficients (time step = Ta = 200 ms) 
+    //PID-Controller coefficients
     //y[k] = x[k]b2 + x[k-1]b1 + x[k-2]b0 - y[k-1]a1 - y[k-2]a0
     .b2_i (PID_b2), 
     .b1_i (PID_b1),
@@ -89,9 +82,7 @@ sevenSegDisplay #() DECODER (
 // use bidirectionals ports as output
 assign uio_oe = 8'b11111111;
 assign uio_out = {3'b000, PID_Val};
-
-// sevenSeg Display disabled to meet specs
-//assign sevenSegVal = 4'hA;
+ 
 assign sevenSegVal = (PID_Val[ADC_BITWIDTH] == 1)? (0 - PID_Val[ADC_BITWIDTH-1:0]) : {(ADC_BITWIDTH){1'b0}};
 
 assign uo_out[6:0] = led_out;
