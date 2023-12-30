@@ -15,7 +15,7 @@
 `include "PWM_controller.v"
 `include "PID_core.v"
 
-module FanCTRL #(parameter ADC_BITWIDTH = 8, REG_BITWIDTH = 32, FRAC_BITWIDTH = 30, CLK_FREQ = 1e6, PID_FREQ = 5)(
+module FanCTRL #(parameter ADC_BITWIDTH = 8, REG_BITWIDTH = 32, FRAC_BITWIDTH = 30, CLK_FREQ = 1e6, PID_FREQ = 5, PWM_FREQ = 25e3)(
     input wire clk_i,
     input wire rstn_i,
 
@@ -89,7 +89,7 @@ end
 //------------ PWM section --------------//
 
 //calculate constants
-localparam PWM_CLK_DIV = $rtoi(CLK_FREQ / (25e3 * (2 ** (ADC_BITWIDTH+1)))); // -> 21 - 32 kHz for MIN fan speed => 0% - 33%
+localparam PWM_CLK_DIV = $rtoi(CLK_FREQ / (PWM_FREQ * (2 ** (ADC_BITWIDTH+1)))); // -> 22 - 33 kHz for MIN fan speed => 0% - 35%
 localparam PWM_COUNTER_BITWIDTH = $rtoi(log2(PWM_CLK_DIV+1)); 
 
 reg [PWM_COUNTER_BITWIDTH-1:0] PWM_clk_div_counterValue;
