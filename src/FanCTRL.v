@@ -15,11 +15,9 @@
 `include "PWM_controller.v"
 `include "PID_core.v"
 
-module FanCTRL #(parameter ADC_BITWIDTH = 8, REG_BITWIDTH = 32, FRAC_BITWIDTH = 30, PID_FREQ = 5)(
-    //The module requires a 1 MHz Clk signal to achieve a 200 ms time step
+module FanCTRL #(parameter ADC_BITWIDTH = 8, REG_BITWIDTH = 32, FRAC_BITWIDTH = 30, CLK_FREQ = 1e6, PID_FREQ = 5)(
     input wire clk_i,
     input wire rstn_i,
-    input wire clk_en_i,
 
     //Data-Interface
     input wire [ADC_BITWIDTH-1:0] ADC_value_i,
@@ -41,14 +39,14 @@ module FanCTRL #(parameter ADC_BITWIDTH = 8, REG_BITWIDTH = 32, FRAC_BITWIDTH = 
 
 //Clk Enable 
 localparam MIN_MUL_TICKS = 30;
+localparam MAX_MUL_TICKS = 100;
 localparam PID_STAGES = 5; 
 
-localparam CLK_FREQ = 1e6;  // 1 MHz
-
 //Calculate constants
-localparam PID_CLK_DIV = $rtoi(CLK_FREQ / (PID_STAGES * PID_FREQ)) - 1;
+localparam PID_CLK_DIV = $rtoi(CLK_FREQ / PID_FREQ) - 1;
 localparam PID_COUNTER_BITWIDTH = $rtoi(log2(PID_CLK_DIV+1)); 
-localparam CLK_DIV_MULTIPLIER = $rtoi((PID_CLK_DIV + 1) / (2 * (REG_BITWIDTH + ADC_BITWIDTH + 1) + MIN_MUL_TICKS));
+localparam MAX_CLK_DIV_MULTIPLIER = $rtoi((PID_CLK_DIV + 1) / (PID_STAGES * 2 * (REG_BITWIDTH + ADC_BITWIDTH + 1) + MIN_MUL_TICKS));
+localparam CLK_DIV_MULTIPLIER = (MAX_CLK_DIV_MULTIPLIER > MAX_MUL_TICKS)? MAX_MUL_TICKS : MAX_CLK_DIV_MULTIPLIER;
 
 //------------ PID section --------------//
 
@@ -81,9 +79,9 @@ always @(posedge clk_i) begin
 
     if (!rstn_i) begin
         PID_clk_div_counterValue <= 0;
-    end else if (clk_en_i && PID_clk_div_counterValue == PID_CLK_DIV[PID_COUNTER_BITWIDTH-1:0]) begin
+    end else if (PID_clk_div_counterValue == PID_CLK_DIV[PID_COUNTER_BITWIDTH-1:0]) begin
         PID_clk_div_counterValue <= 0;
-    end else if (clk_en_i) begin
+    end else begin
         PID_clk_div_counterValue <= PID_clk_div_counterValue + 1;
     end
 end
@@ -91,7 +89,7 @@ end
 //------------ PWM section --------------//
 
 //calculate constants
-localparam PWM_CLK_DIV = 1; // -> 21 - 32 kHz for MIN fan speed => 0% - 33%
+localparam PWM_CLK_DIV = $rtoi(CLK_FREQ / (25e3 * (2 ** (ADC_BITWIDTH+1)))); // -> 21 - 32 kHz for MIN fan speed => 0% - 33%
 localparam PWM_COUNTER_BITWIDTH = $rtoi(log2(PWM_CLK_DIV+1)); 
 
 reg [PWM_COUNTER_BITWIDTH-1:0] PWM_clk_div_counterValue;
@@ -116,9 +114,9 @@ always @(posedge clk_i) begin
 
    if (!rstn_i) begin
        PWM_clk_div_counterValue <= 0;
-   end else if (clk_en_i && PWM_clk_div_counterValue == PWM_CLK_DIV[PWM_COUNTER_BITWIDTH-1:0]) begin
+   end else if (PWM_clk_div_counterValue == PWM_CLK_DIV[PWM_COUNTER_BITWIDTH-1:0]) begin
        PWM_clk_div_counterValue <= 0;
-   end else if (clk_en_i) begin
+   end else begin
        PWM_clk_div_counterValue <= PWM_clk_div_counterValue + 1;
    end
 end
