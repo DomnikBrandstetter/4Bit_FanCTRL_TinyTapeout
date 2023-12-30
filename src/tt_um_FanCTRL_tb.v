@@ -2,11 +2,11 @@
 `default_nettype none
 `include "tt_um_FanCTRL.v"
 
-module tt_FanCTRL_tb;
+module tt_um_FanCTRL_tb;
 
 //PT2-Glied 4-Bit PI 1Hz 
 localparam ADC_BITWIDTH = 4;
-localparam PT2_FREQ = 1000; // 5 Hz
+localparam PT2_FREQ = 1000; // 1 kHz
 localparam real B2_PT2 = 1.3681259298752577e-07;   
 localparam real B1_PT2 = 2.7362518597505155e-07;  
 localparam real B0_PT2 = 1.3681259298752577e-07;  
@@ -30,8 +30,6 @@ reg [ADC_BITWIDTH-1:0]SET_TEST_sim;
 
 reg PT2_enable = 0;
 localparam CLK_EN_FREQ = 1e6;
-localparam PID_STAGES = 5; // 5 Hz
-localparam CLK_DIV_PID = 2;
 localparam PT2_CLK_DIV = $rtoi(CLK_EN_FREQ / (PT2_FREQ)) - 1;
 localparam PID_COUNTER_BITWIDTH = $rtoi(log2(PT2_CLK_DIV+1)); 
 localparam PT2_START_VAL = 50.0;
@@ -47,7 +45,7 @@ assign PID_Val_tb = uio_out[ADC_BITWIDTH:0];
 
 assign ADC_VAL_sim = (PT2_enable == 1)? ADC_PT2_sim : ADC_TEST_sim;
 assign SET_VAL_sim = (PT2_enable == 1)? SET_PT2_sim : SET_TEST_sim; 
-assign ADC_PT2_sim = $rtoi(PT2_val[0]/5 + PT2_START_VAL/5);
+assign ADC_PT2_sim = $rtoi((PT2_val[0] + PT2_START_VAL + 2.5)/5); //$rtoi(PT2_val[0]/5 + PT2_START_VAL/5);
 
 assign ui_in = {SET_VAL_sim, ADC_VAL_sim};  
 
@@ -66,7 +64,7 @@ always @(posedge clk_tb, rstn_tb) begin
     end
 end
 
-tt_um_FanCTRL #() tt_um_FAN (
+tt_um_FanCTRL_DomnikBrandstetter #() tt_um_FAN (
     `ifdef GL_TEST
         .VPWR( 1'b1),
         .VGND( 1'b0),
