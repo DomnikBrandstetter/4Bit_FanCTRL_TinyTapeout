@@ -146,7 +146,8 @@ always @(posedge clk_i) begin
 end
 
 //5-pipe stages for multiplications
-//pipeStage = 0-4 -> multiply / accumulate
+//pipeStage = 0   -> multiply
+//pipeStage = 2-4 -> multiply & accumulate
 always @(posedge clk_i) begin
 
     if (!rstn_i) begin
@@ -162,39 +163,6 @@ always @(posedge clk_i) begin
         MUL_Start_STRB <= 0;
     end
 end
-
-
-
-// //6-pipe stages for multiplications
-// //pipeStage = 0   -> IDLE
-// //pipeStage = 1-5 -> multiply / accumulate
-// always @(posedge clk_i) begin
-
-//     if (!rstn_i) begin
-//         pipeStage  <= 0;
-//     end else if(pipeStage == 5 && MulResult_Flag) begin
-//         pipeStage <= 0;
-//     end else if(clk_en_PID_i && pipeStage != 5) begin
-//        pipeStage <= pipeStage + 1;
-//     end
-// end
-
-// //multiply / accumulate pipeline
-// always @(posedge clk_i) begin
-
-//     if (!rstn_i) begin
-//         MUL_Start_STRB <= 0;
-//         MulResult_Flag <= 0;
-//     end else if(clk_en_PID_i) begin
-//         MUL_Start_STRB <= 1;
-//         MulResult_Flag <= 0;
-//     end else if (!MulResult_Flag && MUL_Done_STRB) begin
-//         MUL_Start_STRB <= 0;
-//         MulResult_Flag <= 1;
-//     end else begin
-//         MUL_Start_STRB <= 0;
-//     end
-// end
 
 // Function to select the appropriate multiplier based on the pipeline stage
 function signed[RESULT_BITWIDTH-1:0] get_Multiplier; 
