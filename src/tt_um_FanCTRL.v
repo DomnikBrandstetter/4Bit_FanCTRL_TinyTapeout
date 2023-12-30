@@ -31,8 +31,8 @@ localparam REG_BITWIDTH = 2; // >= 1
 localparam ADC_BITWIDTH = 4;
 
 // PI - Parameter -> 5 Hz / 4 Bit ADC
-localparam PID_FREQ      = 5;   // 5 HZ
-localparam CLK_FREQ      = 1e6; // 1 MHz   
+localparam CLK_FREQ      = 1e6; // 1 MHz 
+localparam PID_FREQ      = 5;   // 5 HZ  
 localparam FRAC_BITWIDTH = 6;
 localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b2 =   8'd94;  
 localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b1 =  -8'd93;   
