@@ -31,7 +31,8 @@ localparam REG_BITWIDTH = 2; // >= 1
 localparam ADC_BITWIDTH = 4;
 
 // PI - Parameter -> 5 Hz / 4 Bit ADC
-localparam PID_FREQ      = 5;     
+localparam PID_FREQ      = 5;   // 5 HZ
+localparam CLK_FREQ      = 1e6; // 1 MHz   
 localparam FRAC_BITWIDTH = 6;
 localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b2 =   8'd94;  
 localparam signed [REG_BITWIDTH+FRAC_BITWIDTH-1:0] PID_b1 =  -8'd93;   
@@ -49,11 +50,10 @@ wire [ADC_BITWIDTH-1:0] sevenSegVal;
 
 wire [6:0] led_out;
 
-FanCTRL #(.ADC_BITWIDTH (ADC_BITWIDTH), .REG_BITWIDTH (REG_BITWIDTH+FRAC_BITWIDTH), .FRAC_BITWIDTH (FRAC_BITWIDTH), .PID_FREQ (PID_FREQ)) FAN (
-    //The module requires a 1 MHz clk_en signal to achieve a 200 ms time step
+//The module requires a 1 MHz clk_en signal to achieve a 200 ms time step
+FanCTRL #(.ADC_BITWIDTH (ADC_BITWIDTH), .REG_BITWIDTH (REG_BITWIDTH+FRAC_BITWIDTH), .FRAC_BITWIDTH (FRAC_BITWIDTH), .CLK_FREQ(CLK_FREQ), .PID_FREQ (PID_FREQ)) FAN (
     .clk_i (clk),
     .rstn_i (rst_n),
-    .clk_en_i (1'b1),
     
     //Data-Interface
     .ADC_value_i (ui_in[ADC_BITWIDTH-1:0]),
