@@ -46,7 +46,6 @@ localparam signed [RESULT_BITWIDTH-1:0]MIN_OUT_VALUE = -(2 ** (ADC_BITWIDTH)) + 
 
 reg  MUL_Start_STRB;
 wire MUL_Done_STRB;
-reg MulResult_Flag;
 reg [PID_STAGES_BITWIDTH-1:0] pipeStage;
 reg signed [ADC_BITWIDTH:0] out_Val;
 
@@ -104,7 +103,7 @@ assign a1_coeff = {{{RESULT_BITWIDTH-REG_BITWIDTH{a1_reg_i[REG_BITWIDTH-1]}}}, a
 assign a0_coeff = {{{RESULT_BITWIDTH-REG_BITWIDTH{a0_reg_i[REG_BITWIDTH-1]}}}, a0_reg_i};
 
 //Result value of the last multiplication will be fed back into the multiplier to achieve accumulation
-assign MUL_acc = (pipeStage == 1)? {{RESULT_BITWIDTH{1'b0}}} : result_Val;
+assign MUL_acc = (pipeStage == 0)? {{RESULT_BITWIDTH{1'b0}}} : result_Val;
 assign MUL_a = get_Multiplier(pipeStage, b0_coeff, b1_coeff, b2_coeff, -a0_coeff, -a1_coeff);
 assign MUL_b = get_Multiplier(pipeStage, error_Val_scaled_m2, error_Val_scaled_m1, error_Val_scaled_m0, out_Val_sreg[1] >>> FRAC_BITWIDTH, out_Val_sreg[0] >>> FRAC_BITWIDTH); 
 
@@ -120,7 +119,7 @@ always @(posedge clk_i) begin
         out_Val_sreg[0]   <= 0;
         out_Val_sreg[1]   <= 0;
         out_Val           <= 0;
-    end else if(clk_en_PID_i && pipeStage == 0) begin
+    end else if(MUL_Done_STRB && pipeStage == 4) begin
         error_Val_sreg[0] <= error_Val;  
         error_Val_sreg[1] <= error_Val_sreg[0];
         error_Val_sreg[2] <= error_Val_sreg[1];
@@ -146,36 +145,56 @@ always @(posedge clk_i) begin
     end 
 end
 
-//6-pipe stages for multiplications
-//pipeStage = 0   -> IDLE
-//pipeStage = 1-5 -> multiply / accumulate
+//5-pipe stages for multiplications
+//pipeStage = 0-4 -> multiply / accumulate
 always @(posedge clk_i) begin
 
     if (!rstn_i) begin
         pipeStage  <= 0;
-    end else if(pipeStage == 5 && MulResult_Flag) begin
-        pipeStage <= 0;
-    end else if(clk_en_PID_i && pipeStage != 5) begin
-       pipeStage <= pipeStage + 1;
-    end
-end
-
-//multiply / accumulate pipeline
-always @(posedge clk_i) begin
-
-    if (!rstn_i) begin
         MUL_Start_STRB <= 0;
-        MulResult_Flag <= 0;
     end else if(clk_en_PID_i) begin
+        pipeStage  <= 0;
         MUL_Start_STRB <= 1;
-        MulResult_Flag <= 0;
-    end else if (!MulResult_Flag && MUL_Done_STRB) begin
-        MUL_Start_STRB <= 0;
-        MulResult_Flag <= 1;
+    end else if(MUL_Done_STRB && pipeStage != 4) begin
+        pipeStage <= pipeStage + 1;
+        MUL_Start_STRB <= 1;
     end else begin
         MUL_Start_STRB <= 0;
     end
 end
+
+
+
+// //6-pipe stages for multiplications
+// //pipeStage = 0   -> IDLE
+// //pipeStage = 1-5 -> multiply / accumulate
+// always @(posedge clk_i) begin
+
+//     if (!rstn_i) begin
+//         pipeStage  <= 0;
+//     end else if(pipeStage == 5 && MulResult_Flag) begin
+//         pipeStage <= 0;
+//     end else if(clk_en_PID_i && pipeStage != 5) begin
+//        pipeStage <= pipeStage + 1;
+//     end
+// end
+
+// //multiply / accumulate pipeline
+// always @(posedge clk_i) begin
+
+//     if (!rstn_i) begin
+//         MUL_Start_STRB <= 0;
+//         MulResult_Flag <= 0;
+//     end else if(clk_en_PID_i) begin
+//         MUL_Start_STRB <= 1;
+//         MulResult_Flag <= 0;
+//     end else if (!MulResult_Flag && MUL_Done_STRB) begin
+//         MUL_Start_STRB <= 0;
+//         MulResult_Flag <= 1;
+//     end else begin
+//         MUL_Start_STRB <= 0;
+//     end
+// end
 
 // Function to select the appropriate multiplier based on the pipeline stage
 function signed[RESULT_BITWIDTH-1:0] get_Multiplier; 
@@ -183,19 +202,19 @@ input [PID_STAGES_BITWIDTH-1:0] x;
 input signed[RESULT_BITWIDTH-1:0] Multiplier_1, Multiplier_2, Multiplier_3, Multiplier_4, Multiplier_5;
     begin
         case(x)
-            1 : begin 
+            0 : begin 
                 get_Multiplier = Multiplier_1;
             end 
-            2 : begin 
+            1 : begin 
                 get_Multiplier = Multiplier_2;
             end 
-            3 : begin 
+            2 : begin 
                 get_Multiplier = Multiplier_3;
             end 
-            4 : begin 
+            3 : begin 
                 get_Multiplier = Multiplier_4;
             end 
-            5 : begin 
+            4 : begin 
                 get_Multiplier = Multiplier_5;
             end 
             default : begin 
