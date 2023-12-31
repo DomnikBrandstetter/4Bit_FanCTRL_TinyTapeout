@@ -119,10 +119,15 @@ always @(posedge clk_i) begin
         out_Val_sreg[0]   <= 0;
         out_Val_sreg[1]   <= 0;
         out_Val           <= 0;
-    end else if(MUL_Done_STRB && pipeStage == 4) begin
+        
+    //shift error when clk enable is high
+    end else if(clk_en_PID_i) begin
         error_Val_sreg[0] <= error_Val;  
         error_Val_sreg[1] <= error_Val_sreg[0];
         error_Val_sreg[2] <= error_Val_sreg[1];
+    
+    //shift result of controller when multiplication is done
+    end else if(MUL_Done_STRB && pipeStage == 4) begin
         out_Val_sreg[1]   <= out_Val_sreg[0];
 
         //Limit MAX/MIN result values
