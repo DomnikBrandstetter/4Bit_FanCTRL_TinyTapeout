@@ -104,8 +104,8 @@ assign a0_coeff = {{{RESULT_BITWIDTH-REG_BITWIDTH{a0_reg_i[REG_BITWIDTH-1]}}}, a
 
 //Result value of the last multiplication will be fed back into the multiplier to achieve accumulation
 assign MUL_acc = (pipeStage == 0)? {{RESULT_BITWIDTH{1'b0}}} : result_Val;
-assign MUL_a = get_Multiplier(pipeStage, -a0_coeff, -a1_coeff, b0_coeff, b1_coeff, b2_coeff);
-assign MUL_b = get_Multiplier(pipeStage, out_Val_sreg[1] >>> FRAC_BITWIDTH, out_Val_sreg[0] >>> FRAC_BITWIDTH, error_Val_scaled_m2, error_Val_scaled_m1, error_Val_scaled_m0); 
+assign MUL_a = get_Multiplier(pipeStage, b0_coeff, b1_coeff, b2_coeff, -a0_coeff, -a1_coeff);
+assign MUL_b = get_Multiplier(pipeStage, error_Val_scaled_m2, error_Val_scaled_m1, error_Val_scaled_m0, out_Val_sreg[1] >>> FRAC_BITWIDTH, out_Val_sreg[0] >>> FRAC_BITWIDTH); 
 
 assign out_Val_o = out_Val; 
 
@@ -150,6 +150,8 @@ always @(posedge clk_i) begin
     end 
 end
 
+reg delay;
+
 //5-pipe stages for multiplications
 //pipeStage = 0   -> multiply
 //pipeStage = 2-4 -> multiply & accumulate
@@ -158,7 +160,8 @@ always @(posedge clk_i) begin
     if (!rstn_i) begin
         pipeStage  <= 0;
         MUL_Start_STRB <= 0;
-    end else if(clk_en_PID_i) begin
+        delay <= 0;
+    end else if(delay) begin
         pipeStage  <= 0;
         MUL_Start_STRB <= 1;
     end else if(MUL_Done_STRB && pipeStage != 4) begin
@@ -166,6 +169,17 @@ always @(posedge clk_i) begin
         MUL_Start_STRB <= 1;
     end else begin
         MUL_Start_STRB <= 0;
+    end
+end
+
+always @(posedge clk_i) begin
+
+    if (!rstn_i) begin
+        delay <= 0;
+    end else if(clk_en_PID_i) begin
+        delay <= 1;
+    end else begin
+    	delay <= 0;
     end
 end
 
