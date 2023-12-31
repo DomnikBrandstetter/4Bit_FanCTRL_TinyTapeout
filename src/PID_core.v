@@ -104,8 +104,8 @@ assign a0_coeff = {{{RESULT_BITWIDTH-REG_BITWIDTH{a0_reg_i[REG_BITWIDTH-1]}}}, a
 
 //Result value of the last multiplication will be fed back into the multiplier to achieve accumulation
 assign MUL_acc = (pipeStage == 0)? {{RESULT_BITWIDTH{1'b0}}} : result_Val;
-assign MUL_a = get_Multiplier(pipeStage, b0_coeff, b1_coeff, b2_coeff, -a0_coeff, -a1_coeff);
-assign MUL_b = get_Multiplier(pipeStage, error_Val_scaled_m2, error_Val_scaled_m1, error_Val_scaled_m0, out_Val_sreg[1] >>> FRAC_BITWIDTH, out_Val_sreg[0] >>> FRAC_BITWIDTH); 
+assign MUL_a = get_Multiplier(pipeStage, -a0_coeff, -a1_coeff, b0_coeff, b1_coeff, b2_coeff);
+assign MUL_b = get_Multiplier(pipeStage, out_Val_sreg[1] >>> FRAC_BITWIDTH, out_Val_sreg[0] >>> FRAC_BITWIDTH, error_Val_scaled_m2, error_Val_scaled_m1, error_Val_scaled_m0); 
 
 assign out_Val_o = out_Val; 
 
@@ -120,7 +120,7 @@ always @(posedge clk_i) begin
         out_Val_sreg[1]   <= 0;
         out_Val           <= 0;
         
-    //Shift error when clk enable is high
+    //Shift error when Clk-enable is high
     end else if(clk_en_PID_i) begin
         error_Val_sreg[0] <= error_Val;  
         error_Val_sreg[1] <= error_Val_sreg[0];
