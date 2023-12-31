@@ -110,6 +110,18 @@ assign MUL_b = get_Multiplier(pipeStage, error_Val_scaled_m2, error_Val_scaled_m
 
 assign out_Val_o = out_Val; 
 
+// Clk-Enable-buffer to split/reduce Fanout 
+always @(posedge clk_i) begin
+
+    if (!rstn_i) begin
+        clk_en_PID_buffer <= 0;
+    end else if(clk_en_PID_i) begin
+        clk_en_PID_buffer <= 1;
+    end else begin
+        clk_en_PID_buffer <= 0;
+    end
+end
+
 //Shift Comb
 always @(posedge clk_i) begin
 
@@ -167,18 +179,6 @@ always @(posedge clk_i) begin
         MUL_Start_STRB <= 1;
     end else begin
         MUL_Start_STRB <= 0;
-    end
-end
-
-// CLk-Enable-buffer to reduze Fanout 
-always @(posedge clk_i) begin
-
-    if (!rstn_i) begin
-        clk_en_PID_buffer <= 0;
-    end else if(clk_en_PID_i) begin
-        clk_en_PID_buffer <= 1;
-    end else begin
-        clk_en_PID_buffer <= 0;
     end
 end
 
