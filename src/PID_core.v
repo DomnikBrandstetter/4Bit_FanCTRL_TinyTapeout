@@ -44,8 +44,8 @@ localparam signed [RESULT_BITWIDTH-1:0]MIN_PID_VALUE = -(2 ** (MAX_VAL_BITWIDTH 
 localparam signed [RESULT_BITWIDTH-1:0]MAX_OUT_VALUE = (2 ** (ADC_BITWIDTH)) - 1;  
 localparam signed [RESULT_BITWIDTH-1:0]MIN_OUT_VALUE = -(2 ** (ADC_BITWIDTH)) + 1; 
 
+reg  clk_en_PID_buffer;
 reg  MUL_Start_STRB;
-reg  MUL_Start_STRB_reg;
 wire MUL_Done_STRB;
 reg [PID_STAGES_BITWIDTH-1:0] pipeStage;
 reg signed [ADC_BITWIDTH:0] out_Val;
@@ -78,7 +78,7 @@ wire signed [RESULT_BITWIDTH-1:0] a0_coeff;
 MUL_ACC #(.N (MULTIPLIER_BITWIDTH), .CLK_DIV_MULTIPLIER(CLK_DIV_MULTIPLIER)) MUL (
     .clk_i (clk_i),
     .rstn_i (rstn_i),
-    .MUL_Start_STRB_i (MUL_Start_STRB_reg),
+    .MUL_Start_STRB_i (MUL_Start_STRB),
     .MUL_Done_STRB_o (MUL_Done_STRB),
     .a_i (MUL_a),
     .b_i (MUL_b),
@@ -159,7 +159,7 @@ always @(posedge clk_i) begin
     if (!rstn_i) begin
         pipeStage  <= 0;
         MUL_Start_STRB <= 0;
-    end else if(clk_en_PID_i) begin
+    end else if(clk_en_PID_buffer) begin
         pipeStage  <= 0;
         MUL_Start_STRB <= 1;
     end else if(MUL_Done_STRB && pipeStage != 4) begin
@@ -170,16 +170,15 @@ always @(posedge clk_i) begin
     end
 end
 
-// delay start of multiplication by one clock cycle 
-// needed to meet timing requirements
+// CLk-Enable-buffer to reduze Fanout 
 always @(posedge clk_i) begin
 
     if (!rstn_i) begin
-        MUL_Start_STRB_reg <= 0;
-    end else if(MUL_Start_STRB) begin
-        MUL_Start_STRB_reg <= 1;
+        clk_en_PID_buffer <= 0;
+    end else if(clk_en_PID_i) begin
+        clk_en_PID_buffer <= 1;
     end else begin
-        MUL_Start_STRB_reg <= 0;
+        clk_en_PID_buffer <= 0;
     end
 end
 
