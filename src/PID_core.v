@@ -46,6 +46,7 @@ localparam signed [RESULT_BITWIDTH-1:0]MIN_OUT_VALUE = -(2 ** (ADC_BITWIDTH)) + 
 
 reg  MUL_Start_STRB;
 wire MUL_Done_STRB;
+reg MUL_busyFlag;
 reg [PID_STAGES_BITWIDTH-1:0] pipeStage;
 reg signed [ADC_BITWIDTH:0] out_Val;
 
@@ -150,36 +151,30 @@ always @(posedge clk_i) begin
     end 
 end
 
-reg delay;
-
 //5-pipe stages for multiplications
-//pipeStage = 0   -> multiply
-//pipeStage = 2-4 -> multiply & accumulate
+//pipeStage = 0-4 &&  busyFlag -> load Data
+//pipeStage = 0   && !busyFlag -> multiply
+//pipeStage = 1-4 && !busyFlag -> multiply & accumulate
 always @(posedge clk_i) begin
 
     if (!rstn_i) begin
         pipeStage  <= 0;
         MUL_Start_STRB <= 0;
-        //delay <= 0;
-    end else if(delay) begin
+        MUL_busyFlag <= 0;
+    end else if(clk_en_PID_i) begin
         pipeStage  <= 0;
+        MUL_busyFlag <= 1;
+    end else if(MUL_busyFlag && pipeStage != 4) begin
+        pipeStage <= pipeStage + 1;       
+    end else if(MUL_busyFlag && pipeStage == 4) begin
+        pipeStage <= 0;
+        MUL_busyFlag <= 0;
         MUL_Start_STRB <= 1;
-    end else if(MUL_Done_STRB && pipeStage != 4) begin
+    end else if(!MUL_busyFlag && MUL_Done_STRB && pipeStage != 4) begin
         pipeStage <= pipeStage + 1;
         MUL_Start_STRB <= 1;
     end else begin
         MUL_Start_STRB <= 0;
-    end
-end
-
-always @(posedge clk_i) begin
-
-    if (!rstn_i) begin
-        delay <= 0;
-    end else if(clk_en_PID_i) begin
-        delay <= 1;
-    end else begin
-    	delay <= 0;
     end
 end
 
