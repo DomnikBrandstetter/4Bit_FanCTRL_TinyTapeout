@@ -160,7 +160,7 @@ always @(posedge clk_i) begin
     if (!rstn_i) begin
         pipeStage  <= 0;
         MUL_Start_STRB <= 0;
-        delay <= 0;
+        //delay <= 0;
     end else if(delay) begin
         pipeStage  <= 0;
         MUL_Start_STRB <= 1;
